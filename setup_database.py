@@ -1,6 +1,7 @@
 import os
 import bcrypt
 from datetime import datetime, timedelta
+import sqlite3
 
 from database.db_manager import DatabaseManager
 from utils.constants import EVENT_STATUS, DELIVERY_STATUS, TEAM_ROLES, ASSET_TYPES
@@ -229,6 +230,46 @@ def insert_sample_data():
         print(f"Erro ao inserir dados de exemplo: {e}")
         return False
 
+# Corrigindo tabelas ausentes no banco de dados
+def criar_tabelas():
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    tabelas = {
+        'events': """CREATE TABLE IF NOT EXISTS events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            date TEXT NOT NULL
+        )""",
+        'team_members': """CREATE TABLE IF NOT EXISTS team_members (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            role TEXT NOT NULL
+        )""",
+        'clients': """CREATE TABLE IF NOT EXISTS clients (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            contact TEXT NOT NULL
+        )""",
+        'users': """CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL
+        )""",
+        'briefings': """CREATE TABLE IF NOT EXISTS briefings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id INTEGER NOT NULL,
+            details TEXT NOT NULL,
+            FOREIGN KEY(event_id) REFERENCES events(id)
+        )"""
+    }
+
+    for nome, sql in tabelas.items():
+        cursor.execute(sql)
+
+    conn.commit()
+    conn.close()
+
 def main():
     """Função principal para executar a configuração do banco de dados."""
     if not os.path.exists("./database"):
@@ -237,6 +278,9 @@ def main():
     db_success = setup_database()
     if db_success and input("Deseja inserir dados de exemplo? (s/n): ").lower() == 's':
         insert_sample_data()
+    
+    criar_tabelas()
+    print("Tabelas criadas ou já existentes no banco de dados.")
     
     print("\nProcesso de configuração do banco de dados concluído!")
     print("\nCredenciais de acesso:")

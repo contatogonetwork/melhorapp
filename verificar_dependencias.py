@@ -9,9 +9,18 @@ import pkg_resources
 def check_package(package_name):
     """Verifica se um pacote está instalado e sua versão"""
     try:
+        # Tratamento especial para pacotes builtin
+        if package_name in ['sqlite3', 'datetime', 'uuid']:
+            try:
+                importlib.import_module(package_name)
+                return True, f"{package_name} (módulo nativo)"
+            except ImportError:
+                return False, f"{package_name} não encontrado"
+        
+        # Pacotes instaláveis via pip
         package = pkg_resources.get_distribution(package_name)
         return True, f"{package.key} {package.version}"
-    except pkg_resources.DistributionNotFound:
+    except (pkg_resources.DistributionNotFound, ValueError):
         return False, f"{package_name} não encontrado"
 
 def scan_imports_in_file(file_path):
@@ -79,8 +88,23 @@ def main():
     # Ordenar por frequência
     sorted_imports = sorted(import_count.items(), key=lambda x: x[1], reverse=True)
     for module, count in sorted_imports[:15]:  # Top 15
-        installed, _ = check_package(module)
-        status = "✓" if installed or module in sys.builtin_module_names or module in ['database', 'gui', 'resources'] else "?"
+        try:
+            # Verificar se é um módulo nativo do Python
+            if module in sys.builtin_module_names:
+                status = "✓"
+            # Verificar se é um módulo do projeto
+            elif module in ['database', 'gui', 'resources', 'utils']:
+                status = "✓"
+            else:
+                # Tentar importar para verificar se está disponível
+                try:
+                    importlib.import_module(module)
+                    status = "✓"
+                except ImportError:
+                    status = "?"
+        except Exception:
+            status = "?"
+        
         print(f"{status} {module}: {count} arquivos")
     
     print(f"\n{'=' * 60}")

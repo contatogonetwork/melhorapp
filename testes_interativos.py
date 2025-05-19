@@ -35,7 +35,7 @@ class TestRunner:
                 None, 
                 "Teste Interativo", 
                 "Teste de login aberto.\n\n"
-                "1. Digite 'contatogonetworknao' e senha válida\n"
+                "1. Digite 'admin' e senha 'admin123'\n"
                 "2. Clique em Login\n"
                 "3. Verifique se o login é bem-sucedido\n\n"
                 "Clique OK para continuar."
