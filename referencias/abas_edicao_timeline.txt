@@ -1,0 +1,214 @@
+EXECUTE
+
+
+
+
+Segue  **prompt técnico final, robusto e detalhado**, integrando e aprimorando as abas **BRIEFING** e **TIMELINE** com base no que já foi implementado na ferramenta GoNetwork AI, respeitando integralmente o que já existe e se integrando harmonicamente com as demais abas do sistema. 
+
+---
+
+# 📌 **PROMPT FINAL EXTREMAMENTE DETALHADO PARA IMPLEMENTAÇÃO DAS ABAS BRIEFING E TIMELINE**
+
+Este documento contém instruções altamente detalhadas e técnicas para serem executadas diretamente no VSCode para implementar melhorias nas abas **Briefing** e **Timeline** da ferramenta GoNetwork AI, com base na estrutura já existente, integrada de forma limpa e fluida com as demais abas.
+
+---
+
+## 🚨 **IMPORTANTE: REGRAS ABSOLUTAS DE IMPLEMENTAÇÃO**
+
+* **NÃO MODIFIQUE NADA ALÉM DO DESCRITO AQUI**.
+* **NÃO EXCLUA OU ALTERE FUNCIONALIDADES EXISTENTES FORA DESTE ESCOPO**.
+* Apenas implementar e ajustar as abas **BRIEFING** e **TIMELINE** conforme estas especificações.
+* **Garanta que as interações com outras abas sejam via utilização de métodos e repositórios existentes.**
+
+---
+
+## 📁 **Estrutura de Diretórios (OBRIGATÓRIA)**
+
+```bash
+melhorapp/
+├── gui/widgets/
+│   ├── briefing_widget.py
+│   └── timeline_widget.py
+├── core/repositories/
+│   ├── BriefingRepository.py
+│   └── TimelineRepository.py
+└── database/schema/
+    ├── briefing_tables.sql
+    └── timeline_events.sql
+```
+
+---
+
+# 🔹 **ABA BRIEFING – Implementação Detalhada**
+
+**Finalidade:** Centralização estratégica completa dos eventos audiovisuais, alimentando diretamente as abas Timeline, Edições, Entregas e Equipe.
+
+## **1. BriefingWidget (GUI)**
+
+* `briefing_widget.py`
+* `BriefingWidget(QWidget)`
+
+### ✅ **Estrutura da Interface (QTabWidget)**:
+
+* **Seletor de Evento (`QComboBox`)**: obrigatoriamente conectado ao estado global do evento selecionado.
+* **Informações Gerais (`QTextEdit`)**
+* **Estilo e Referências (`QTextEdit`)**
+* **Patrocinadores**:
+
+  * Dinâmica (`QScrollArea` com múltiplos `QGroupBox`)
+  * Campos:
+
+    * Nome da ação (`QLineEdit`)
+    * Horário da captação (`QTimeEdit` + `QCheckBox` para livre)
+    * Responsável (`QComboBox` populado por equipe)
+    * Entrega Real Time (`QCheckBox` + `QTimeEdit`)
+    * Editor responsável (`QComboBox`)
+    * Orientações (`QTextEdit`)
+* **Programação de Palcos (`QTableWidget`)**: Palco, Artista, Horário Início/Fim, Observações.
+* **Entregas** (dividido em Real Time e Pós-Evento):
+
+  * Real Time (`QTableWidget` com Título, Hora, Editor, Plataforma, Orientações)
+  * Pós-Evento (Deadline geral `QDateEdit`, Pacotes `QListWidget` com checkboxes, Observações finais `QTextEdit`)
+
+### ✅ **Botões obrigatórios no rodapé**:
+
+* **Salvar Briefing**: Usa método `BriefingRepository.create_or_update_briefing(event_id, dados)`
+* **Carregar Briefing**: Usa método `BriefingRepository.get_briefing_by_event(event_id)`
+* **Gerar Timeline**: Usa método `TimelineRepository.generate_timeline_from_briefing(event_id)` e emite o sinal `timeline_gerada(event_id)`
+
+---
+
+## **2. BriefingRepository (Backend)**
+
+* `BriefingRepository.py`
+
+### Métodos críticos:
+
+* `create_or_update_briefing(event_id, dados_dict)`
+* `get_briefing_by_event(event_id)`
+* `get_briefing_items_by_type(briefing_id, tipo_item)`
+* **Todas as operações devem utilizar timestamps com ISO8601.**
+
+---
+
+## **3. Banco de Dados Briefing**
+
+* `briefing_tables.sql`
+
+```sql
+CREATE TABLE briefings (
+  id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL UNIQUE,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE briefing_items (
+  id TEXT PRIMARY KEY,
+  briefing_id TEXT NOT NULL,
+  type TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (briefing_id) REFERENCES briefings(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_briefing_items ON briefing_items (briefing_id, type);
+```
+
+---
+
+# 📆 **ABA TIMELINE – Implementação Detalhada**
+
+**Finalidade:** Visualização dinâmica das atividades, baseada exclusivamente nos dados do Briefing.
+
+## **1. TimelineWidget (GUI)**
+
+* `timeline_widget.py`
+* `TimelineWidget(QWidget)`
+
+### ✅ **Estrutura da Interface**:
+
+* **Seletor de Evento (`QComboBox`)**: Obrigatoriamente integrado ao estado global do evento selecionado.
+* **Botão "Gerar/Atualizar Timeline"**: Usa método `TimelineRepository.generate_timeline_from_briefing(event_id)`
+* **Visualizador Cronológico (QGraphicsView/QScrollArea)**:
+
+  * Blocos com título, horário, responsável, status.
+  * Agrupamento por atividade (captação, edição, entrega).
+* **Zoom (`QSlider`)**
+* **Filtros (`QComboBox/QCheckBox`)**: Tipo, Responsável.
+* **Drag & Drop**: atualiza usando `TimelineRepository.update_timeline_item(item_id, dados)`
+* **Detecção visual de conflitos**: usando `TimelineRepository.check_conflicts(event_id)`
+
+---
+
+## **2. TimelineRepository (Backend)**
+
+* `TimelineRepository.py`
+
+### Métodos críticos:
+
+* `generate_timeline_from_briefing(event_id)`
+* `get_timeline_by_event(event_id)`
+* `update_timeline_item(item_id, dados)`
+* `check_conflicts(event_id)`
+
+---
+
+## **3. Banco de Dados Timeline**
+
+* `timeline_events.sql`
+
+```sql
+CREATE TABLE timeline_events (
+  id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL,
+  briefing_item_id TEXT,
+  title TEXT NOT NULL,
+  start_time TEXT NOT NULL,
+  end_time TEXT,
+  type TEXT CHECK(type IN ('captacao','edicao','entrega','preparacao','outro')),
+  status TEXT DEFAULT 'Pendente' CHECK(status IN ('Pendente','Em Andamento','Concluido','Atrasado','Cancelado')),
+  responsible_id TEXT,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (event_id) REFERENCES briefings(event_id) ON DELETE CASCADE
+);
+CREATE INDEX idx_timeline ON timeline_events (event_id, start_time, type, responsible_id);
+```
+
+---
+
+## 🔄 **INTERAÇÕES ENTRE ABAS (apenas informativas, sem implementação adicional)**
+
+* **EDIÇÕES** (já implementada): Recebe automaticamente as entregas e editores definidos no Briefing via métodos existentes.
+* **EQUIPE** (já implementada): Fornece responsáveis populando QComboBox dos widgets via métodos existentes.
+* **ENTREGAS** (já implementada): Utiliza entregas definidas no briefing via métodos existentes.
+* **MONITORAMENTO** (já implementada): Utiliza status das tarefas diretamente da Timeline.
+* **FEEDBACK FINAL** (já implementada): Coleta dados finais usando Briefing e Timeline existentes.
+
+---
+
+## 🛠️ **SCRIPTS DE VALIDAÇÃO FINAL (OBRIGATÓRIOS)**
+
+Executar após implementação:
+
+```bash
+python diagnostico_melhorado_briefing.py
+python diagnostico_melhorado_timeline.py
+python testar_aba_briefing.py
+python testar_aba_timeline.py
+```
+
+---
+
+## 📋 **RECOMENDAÇÕES FINAIS (opcionais, porém altamente recomendadas)**
+
+* Crie testes unitários robustos.
+* Implemente logging detalhado.
+* Avalie responsividade e integridade da UI periodicamente.
+
+---
+
+Este prompt detalhado assegura que as abas **BRIEFING e TIMELINE** sejam implementadas ou ajustadas de forma extremamente clara e precisa, garantindo sua integração perfeita com as demais abas já existentes no sistema **GoNetwork AI**, proporcionando uma experiência coesa e altamente funcional.

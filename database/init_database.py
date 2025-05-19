@@ -1,12 +1,15 @@
+import os
 import random
+import sys
 from datetime import datetime, timedelta
 
-from database import (
-    BriefingRepository,
-    Database,
-    EventRepository,
-    TeamRepository,
-)
+# Adicionar diretório raiz ao path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database.BriefingRepository import BriefingRepository
+from database.Database import Database
+from database.EventRepository import EventRepository
+from database.TeamRepository import TeamRepository
 
 
 def generate_sample_data():
@@ -20,7 +23,26 @@ def generate_sample_data():
     event_repo = EventRepository()
     briefing_repo = BriefingRepository()
 
+    # Criar a tabela event_team se não existir
+    try:
+        sql_file_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            'schema',
+            'event_team.sql'
+        )
+        with open(sql_file_path, 'r') as sql_file:
+            sql_script = sql_file.read()
+            db.execute_query(sql_script)
+        print("Tabela event_team criada com sucesso")
+    except Exception as e:
+        print(f"Erro ao criar tabela event_team: {e}")
+
     # Limpar dados existentes (opcional)
+    try:
+        db.execute_query("DELETE FROM event_team")
+    except Exception as e:
+        print(f"Nota: Tabela event_team ainda não existe: {e}")
+
     db.execute_query("DELETE FROM briefings")
     db.execute_query("DELETE FROM events")
     db.execute_query("DELETE FROM team_members")
@@ -49,15 +71,15 @@ def generate_sample_data():
             "contact": "(11) 96543-2109",
         },
         {
-            "name": "Carlos Mendes",
-            "role": "Editor de Áudio",
-            "email": "carlos@gonetwork.ai",
+            "name": "João Santos",
+            "role": "Editor Sênior",
+            "email": "joao@gonetwork.ai",
             "contact": "(11) 95432-1098",
         },
         {
-            "name": "Luciana Santos",
-            "role": "Motion Designer",
-            "email": "luciana@gonetwork.ai",
+            "name": "Fernanda Lima",
+            "role": "Diretora de Arte",
+            "email": "fernanda@gonetwork.ai",
             "contact": "(11) 94321-0987",
         },
     ]
@@ -72,34 +94,22 @@ def generate_sample_data():
     # Gerar clientes
     clients = [
         {
-            "company": "Empresa ABC",
-            "contact_person": "João Oliveira",
-            "email": "joao@empresaabc.com",
+            "company": "Tech Solutions",
+            "contact_person": "Roberto Mendes",
+            "email": "roberto@techsolutions.com",
             "phone": "(11) 3456-7890",
         },
         {
-            "company": "XYZ Corp",
-            "contact_person": "Fernanda Gomes",
-            "email": "fernanda@xyzcorp.com",
+            "company": "Eventos Especiais",
+            "contact_person": "Carla Dias",
+            "email": "carla@eventosespeciais.com",
             "phone": "(11) 2345-6789",
         },
         {
-            "company": "Tech Solutions",
-            "contact_person": "Ricardo Dias",
-            "email": "ricardo@techsolutions.com",
-            "phone": "(11) 4567-8901",
-        },
-        {
-            "company": "Consultoria DEF",
-            "contact_person": "Amanda Cruz",
-            "email": "amanda@def.com.br",
-            "phone": "(11) 5678-9012",
-        },
-        {
-            "company": "Associação GHI",
-            "contact_person": "Roberto Lima",
-            "email": "roberto@ghi.org.br",
-            "phone": "(11) 6789-0123",
+            "company": "Marketing Digital",
+            "contact_person": "Lucas Ferreira",
+            "email": "lucas@marketingdigital.com",
+            "phone": "(11) 1234-5678",
         },
     ]
 
@@ -112,20 +122,7 @@ def generate_sample_data():
 
     # Gerar eventos
     today = datetime.now()
-    event_types = [
-        "Corporativo",
-        "Festival",
-        "Conferência",
-        "Lançamento",
-        "Outro",
-    ]
-    event_statuses = [
-        "Em planejamento",
-        "Confirmado",
-        "Em andamento",
-        "Concluído",
-        "Cancelado",
-    ]
+    event_types = ["Conferência", "Festival", "Lançamento", "Show", "Corporativo"]
 
     events = [
         {
@@ -191,6 +188,28 @@ def generate_sample_data():
         event_ids.append(event_id)
 
     print(f"Criados {len(event_ids)} eventos")
+
+    # Associar membros da equipe aos eventos (event_team)
+    print("Associando membros da equipe aos eventos...")
+
+    for event_id in event_ids:
+        # Cada evento recebe entre 2 e 5 membros aleatórios da equipe
+        selected_members = random.sample(member_ids, random.randint(2, min(5, len(member_ids))))
+
+        for member_id in selected_members:
+            # Inserir na tabela event_team
+            query = """
+            INSERT INTO event_team (event_id, team_member_id, role, created_at)
+            VALUES (?, ?, ?, ?)
+            """
+
+            # Definir um papel aleatório para o membro no evento
+            roles = ["Produtor", "Editor", "Fotógrafo", "Diretor", "Assistente"]
+            role = random.choice(roles)
+
+            db.insert(query, (event_id, member_id, role, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+
+    print("Membros da equipe associados aos eventos com sucesso!")
 
     # Gerar briefings
     briefing_contents = [

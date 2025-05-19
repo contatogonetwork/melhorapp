@@ -95,8 +95,8 @@ class TeamRepository:
         params.append(member_id)
 
         query = f"""
-        UPDATE team_members 
-        SET {', '.join(set_clause)} 
+        UPDATE team_members
+        SET {', '.join(set_clause)}
         WHERE id = ?
         """
 
@@ -129,8 +129,8 @@ class TeamRepository:
         """
         search_term = f"%{keyword}%"
         query = """
-        SELECT * FROM team_members 
-        WHERE name LIKE ? 
+        SELECT * FROM team_members
+        WHERE name LIKE ?
            OR role LIKE ?
            OR email LIKE ?
            OR contact LIKE ?
@@ -159,6 +159,32 @@ class TeamRepository:
         """
         query = "SELECT * FROM team_members WHERE role = ? ORDER BY name"
         results = self.db.fetch_all(query, (role,))
+
+        members = []
+        for row in results:
+            members.append(dict(row))
+
+        return members
+
+    def get_event_team(self, event_id):
+        """
+        Busca os membros da equipe associados a um evento específico
+
+        Args:
+            event_id: ID do evento
+
+        Returns:
+            list: Lista de dicionários com dados dos membros da equipe
+        """
+        query = """
+        SELECT tm.*
+        FROM team_members tm
+        JOIN event_team et ON tm.id = et.team_member_id
+        WHERE et.event_id = ?
+        ORDER BY tm.name
+        """
+
+        results = self.db.fetch_all(query, (event_id,))
 
         members = []
         for row in results:
@@ -252,8 +278,8 @@ class TeamRepository:
         params.append(client_id)
 
         query = f"""
-        UPDATE clients 
-        SET {', '.join(set_clause)} 
+        UPDATE clients
+        SET {', '.join(set_clause)}
         WHERE id = ?
         """
 
@@ -286,8 +312,8 @@ class TeamRepository:
         """
         search_term = f"%{keyword}%"
         query = """
-        SELECT * FROM clients 
-        WHERE company LIKE ? 
+        SELECT * FROM clients
+        WHERE company LIKE ?
            OR contact_person LIKE ?
            OR email LIKE ?
            OR phone LIKE ?
@@ -312,7 +338,7 @@ class TeamRepository:
             list: Lista de clientes com eventos
         """
         query = """
-        SELECT DISTINCT c.* 
+        SELECT DISTINCT c.*
         FROM clients c
         JOIN events e ON c.id = e.client_id
         ORDER BY c.company
