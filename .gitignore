@@ -1,0 +1,44 @@
+# ⛔ Ignora ambientes virtuais
+venv/
+.env/
+.venv/
+
+# ⛔ Arquivos de cache do Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# ⛔ Arquivos de log ou debug
+*.log
+
+# ⛔ Compilados temporários
+*.so
+*.dll
+*.dylib
+*.exe
+
+# ⛔ IDEs e editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ⛔ PyInstaller/PySide builds
+build/
+dist/
+*.spec
+
+# ⛔ Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# ⛔ Banco de dados local (se aplicável)
+*.sqlite3
+*.db
+
+# ⛔ Notebooks temporários
+.ipynb_checkpoints
+
+# ⛔ Cache de pip
+pip-wheel-metadata/
+*.egg-info/
