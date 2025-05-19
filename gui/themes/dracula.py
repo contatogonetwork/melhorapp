@@ -13,6 +13,14 @@ purple_color = "#BD93F9"
 red_color = "#FF5555"
 yellow_color = "#F1FA8C"
 
+# Variáveis adicionais necessárias
+PRIMARY = purple_color
+PRIMARY_LIGHT = "#CBA5FE" 
+BG_THREE = "#383A59"
+BG_FOUR = "#2D303E"
+SUCCESS = green_color
+FONT_COLOR = foreground_color
+
 # Estilos para componentes
 
 # Estilo da barra de título
@@ -133,7 +141,7 @@ input_style = f"""
         border: 1px solid {comment_color};
         padding: 5px;
     }}
-    QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, 
+    QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus,
     QTimeEdit:focus, QDateEdit:focus, QDateTimeEdit:focus {{
         border: 2px solid {purple_color};
     }}
@@ -201,7 +209,7 @@ button_style = f"""
         font-weight: bold;
     }}
     QPushButton:hover {{
-        background-color: #CBA5FE;
+        background-color: {PRIMARY_LIGHT};
     }}
     QPushButton:pressed {{
         background-color: #A77BDB;
@@ -209,6 +217,27 @@ button_style = f"""
     QPushButton:disabled {{
         background-color: {current_line_color};
         color: {comment_color};
+    }}
+"""
+
+# Botão primário (referência ao button_style)
+btn_primary = button_style
+
+# Estilo para botões secundários
+btn_secondary = f"""
+    QPushButton {{
+        background-color: {current_line_color};
+        border-radius: 5px;
+        border: none;
+        padding: 5px 10px;
+        color: {foreground_color};
+    }}
+    QPushButton:hover {{
+        background-color: {comment_color};
+    }}
+    QPushButton:pressed {{
+        background-color: {purple_color};
+        color: {background_color};
     }}
 """
 
@@ -225,6 +254,55 @@ secondary_button_style = f"""
     }}
     QPushButton:pressed {{
         background-color: #4D5A8E;
+    }}
+"""
+
+# Botões específicos para status
+btn_success = f"""
+    QPushButton {{
+        background-color: {green_color};
+        color: {background_color};
+        border-radius: 5px;
+        padding: 8px 15px;
+        font-weight: bold;
+    }}
+    QPushButton:hover {{
+        background-color: #6DFB93;
+    }}
+    QPushButton:pressed {{
+        background-color: #42E869;
+    }}
+"""
+
+btn_danger = f"""
+    QPushButton {{
+        background-color: {red_color};
+        color: {foreground_color};
+        border-radius: 5px;
+        padding: 8px 15px;
+        font-weight: bold;
+    }}
+    QPushButton:hover {{
+        background-color: #FF7777;
+    }}
+    QPushButton:pressed {{
+        background-color: #E64545;
+    }}
+"""
+
+btn_warning = f"""
+    QPushButton {{
+        background-color: {orange_color};
+        color: {background_color};
+        border-radius: 5px;
+        padding: 8px 15px;
+        font-weight: bold;
+    }}
+    QPushButton:hover {{
+        background-color: #FFCA8F;
+    }}
+    QPushButton:pressed {{
+        background-color: #E5A658;
     }}
 """
 
@@ -298,7 +376,7 @@ scrollbar_style = f"""
     QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
         background: none;
     }}
-    
+
     QScrollBar:horizontal {{
         border: none;
         background-color: {background_color};

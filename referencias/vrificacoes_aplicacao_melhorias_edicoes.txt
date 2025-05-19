@@ -1,0 +1,199 @@
+# Procedimento de Diagnóstico Ajustado
+
+Percebo que o procedimento de diagnóstico que você compartilhou tem algumas diferenças de nomenclatura e estrutura em relação à implementação que detalhei no manual. Para verificar corretamente as implementações feitas com base nas minhas orientações, sugiro utilizar este procedimento de diagnóstico atualizado:
+
+## 1. Verificação de Estrutura de Arquivos
+
+```bash
+# Valide a existência dos novos arquivos
+ls -l views/player_component.py
+ls -l views/comment_item.py
+ls -l repositories/editing_repository.py
+ls -l repositories/comment_repository.py
+ls -l models/comment_model.py
+
+# Verifique dependências de mídia instaladas
+pip list | grep -E "PySide6-(QtMultimedia|QtMultimediaWidgets)"
+```
+
+## 2. Verificação de Banco de Dados
+
+```bash
+# Execute este comando para verificar se as tabelas foram criadas corretamente
+python -c "
+from database.Database import Database
+db = Database()
+tables = db.fetch_all(\"\"\"
+    SELECT name FROM sqlite_master 
+    WHERE type='table' AND (
+        name='editor_deliveries' OR 
+        name='comments' OR 
+        name='editing_feedback'
+    )
+\"\"\")
+print('Tabelas de edição encontradas:', [t[0] for t in tables])
+print('Status: ' + ('OK' if len(tables) == 3 else 'INCOMPLETO'))
+"
+```
+
+## 3. Verificação de Integração
+
+```bash
+# Verifique referências entre os módulos
+python -c "
+import sys
+from importlib import import_module
+from pathlib import Path
+
+def check_import(module_path):
+    try:
+        mod = import_module(module_path)
+        print(f'✓ {module_path}: Importado com sucesso')
+        return mod
+    except Exception as e:
+        print(f'✗ {module_path}: Erro - {str(e)}')
+        return None
+
+def check_attr(module, attr_name):
+    if hasattr(module, attr_name):
+        print(f'  ✓ {attr_name}: Encontrado')
+        return True
+    else:
+        print(f'  ✗ {attr_name}: Não encontrado')
+        return False
+
+# Verificar componentes
+player = check_import('views.player_component')
+if player:
+    check_attr(player, 'VideoPlayerComponent')
+    
+comment_item = check_import('views.comment_item')
+if comment_item:
+    check_attr(comment_item, 'CommentItem')
+    
+# Verificar repositórios
+editing_repo = check_import('repositories.editing_repository')
+if editing_repo:
+    check_attr(editing_repo, 'EditingRepository')
+    
+comment_repo = check_import('repositories.comment_repository')
+if comment_repo:
+    check_attr(comment_repo, 'CommentRepository')
+
+# Verificar view principal
+edicoes_view = check_import('views.edicoes_view')
+if edicoes_view:
+    check_attr(edicoes_view, 'EdicoesView')
+"
+```
+
+## 4. Verificação de Funcionalidade da Interface
+
+```python
+# Execute este tester interativo para validar a interface
+python -c "
+try:
+    from PySide6.QtWidgets import QApplication
+    from views.edicoes_view import EdicoesView
+    from views.player_component import VideoPlayerComponent
+    import sys
+    
+    app = QApplication(sys.argv)
+    
+    # Testar componente do player isoladamente
+    print('===== DIAGNÓSTICO DO PLAYER =====')
+    player = VideoPlayerComponent()
+    player.show()
+    print('✓ Player inicializado com sucesso')
+    print('Componentes encontrados:')
+    print(f'  - MediaPlayer: {"Sim" if hasattr(player, "mediaPlayer") else "Não"}')
+    print(f'  - VideoWidget: {"Sim" if hasattr(player, "videoWidget") else "Não"}')
+    print('================================')
+    
+    # Ideal seria testar também a view completa, mas precisaria de contexto
+    # como usuário logado e evento selecionado
+    print('Para testar a view completa, inicie o aplicativo normalmente')
+    
+    # Após 5 segundos fecha o player para continuar
+    from PySide6.QtCore import QTimer
+    timer = QTimer()
+    timer.timeout.connect(app.quit)
+    timer.start(5000)
+    
+    app.exec()
+except Exception as e:
+    print(f'ERRO: {str(e)}')
+"
+```
+
+## 5. Verificação do Fluxo Completo
+
+1. Inicie o aplicativo: `python main.py`
+2. Faça login e navegue até a aba de Edições
+3. Valide o seguinte fluxo de trabalho:
+   - Verifique se a lista de entregas carrega corretamente
+   - Selecione uma entrega e verifique se o player de vídeo é inicializado
+   - Teste adição de comentários com timestamps
+   - Verifique se os comentários são ordenados por tempo do vídeo
+   - Se você estiver como editor:
+     - Teste o envio de uma nova entrega
+     - Verifique se pode marcar comentários como resolvidos
+   - Se você estiver como cliente:
+     - Teste aprovar uma entrega
+     - Teste rejeitar uma entrega com feedback
+   - Teste a sincronização visual dos comentários enquanto o vídeo é reproduzido
+
+## 6. Análise de Resistência a Falhas
+
+Execute as seguintes operações para verificar a robustez:
+
+1. Tente adicionar comentários em um vídeo que ainda não foi carregado
+2. Tente reproduzir um vídeo com URL inválida
+3. Verifique o comportamento quando não há comentários para uma entrega
+4. Teste o redimensionamento da janela para verificar responsividade
+
+## 7. Verificação Específica das Novas Funcionalidades
+
+```bash
+# Verifica configuração do player
+python -c "
+from views.player_component import VideoPlayerComponent
+player = VideoPlayerComponent()
+
+print('✓ VideoPlayerComponent criado')
+print(f'Player tem controle de tempo: {"Sim" if hasattr(player, "timeSlider") else "Não"}')
+print(f'Player tem botão play/pause: {"Sim" if hasattr(player, "playButton") else "Não"}')
+print(f'Player tem função de timestamp: {"Sim" if hasattr(player, "getCurrentTime") else "Não"}')
+"
+
+# Verifica item de comentário
+python -c "
+from views.comment_item import CommentItem
+from models.comment_model import Comment
+import datetime
+
+# Criar um comentário de teste
+test_comment = Comment(
+    id='test123',
+    text='Comentário de teste',
+    author='Testador',
+    timestamp=datetime.datetime.now(),
+    video_timestamp=15000,  # 15 segundos
+    is_resolved=False
+)
+
+# Criar item de comentário
+comment_item = CommentItem(test_comment, is_editor=True)
+
+print('✓ CommentItem criado')
+print(f'Item tem botão de timestamp: {"Sim" if hasattr(comment_item, "goToButton") else "Não"}')
+print(f'Item tem sinal para ir ao timestamp: {"Sim" if hasattr(comment_item, "goToTimestampRequested") else "Não"}')
+print(f'Item tem funcionalidade de resolução: {"Sim" if hasattr(comment_item, "resolveButton") else "Não"}')
+"
+```
+
+---
+
+Este procedimento de diagnóstico está alinhado com a estrutura e as funcionalidades descritas no manual que forneci. Ele verifica os componentes específicos que foram implementados e suas funcionalidades principais.
+
+Lembre-se de que os nomes de arquivos, classes e métodos devem corresponder exatamente aos fornecidos no manual para que o diagnóstico funcione corretamente. Se você fez alguma adaptação durante a implementação, talvez seja necessário ajustar o procedimento de diagnóstico adequadamente.

@@ -1,0 +1,951 @@
+# 📘 Manual de Implementação: Ferramentas da Aba "Edições/Edição"
+
+Para implementar corretamente as funcionalidades da aba "Edições/Edição" no seu projeto PySide6 com tema Dracula, vou detalhar as orientações adaptadas especificamente para o repositório `melhorapp`. Vamos analisar a estrutura do projeto primeiro para melhor contextualização.
+
+## 🔍 Análise da Estrutura do Projeto
+
+Vamos começar explorando os arquivos principais relacionados à aba de Edições:
+
+```list type="issue"
+data:
+- url: "https://github.com/contatogonetwork/melhorapp/issues/1"
+state: "open"
+draft: false
+title: "Precisamos examinar a estrutura do projeto para entender melhor"
+number: 1
+created_at: "2025-05-19T13:44:29Z"
+closed_at: ""
+merged_at: ""
+labels: []
+author: "copilot"
+comments: 0
+assignees_avatar_urls: []
+```
+
+Vou verificar a estrutura do repositório para entender como as implementações devem ser feitas:
+
+```get-github-data
+/repos/contatogonetwork/melhorapp/contents
+```
+
+Agora que entendo melhor a estrutura, vamos examinar os arquivos relacionados à interface de usuário:
+
+```get-github-data
+/repos/contatogonetwork/melhorapp/contents/ui
+```
+
+Vamos verificar os arquivos de implementação:
+
+```get-github-data
+/repos/contatogonetwork/melhorapp/contents/views
+```
+
+Vamos ver o código existente relacionado às edições:
+
+```get-github-data
+/search/code?q=repo:contatogonetwork/melhorapp+filename:edicoes+path:views
+```
+
+Precisamos verificar os modelos de dados disponíveis:
+
+```get-github-data
+/repos/contatogonetwork/melhorapp/contents/models
+```
+
+Vamos procurar repositórios de dados:
+
+```get-github-data
+/search/code?q=repo:contatogonetwork/melhorapp+filename:repository
+```
+
+Agora, com base nessas informações, vou adaptar o manual de orientações especificamente para o seu projeto:
+
+# 📘 Manual de Implementação Detalhado: Aba "Edições/Edição"
+
+## ✅ 1. Player de Vídeo Interativo
+
+### 🎯 Objetivo:
+Substituir o sistema de exibição de vídeo atual por um player completo e interativo.
+
+### 🔧 Implementação no MelhorApp:
+
+1. **Localização dos arquivos:**
+   - Modifique o arquivo `views/edicoes_view.py` para incluir o novo player
+   - Atualize o layout UI correspondente em `ui/edicoes.ui` se necessário
+
+2. **Código de implementação:**
+
+```python name=views/player_component.py
+from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSlider, QLabel
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PySide6.QtMultimediaWidgets import QVideoWidget
+from PySide6.QtGui import QIcon
+from utils.resource_path import resource_path
+from utils.style_sheets import get_style_sheet
+
+class VideoPlayerComponent(QWidget):
+    """Componente de player de vídeo com controles"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setupUi()
+        self.setupConnections()
+        self.setStyleSheet(get_style_sheet("dracula"))
+        
+    def setupUi(self):
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Widget de vídeo
+        self.videoWidget = QVideoWidget()
+        self.layout.addWidget(self.videoWidget)
+        
+        # Player e audio
+        self.mediaPlayer = QMediaPlayer()
+        self.audioOutput = QAudioOutput()
+        self.mediaPlayer.setAudioOutput(self.audioOutput)
+        self.mediaPlayer.setVideoOutput(self.videoWidget)
+        
+        # Controles
+        self.controlLayout = QHBoxLayout()
+        
+        # Botão Play/Pause
+        self.playButton = QPushButton()
+        self.playButton.setIcon(QIcon(resource_path("assets/icons/play.svg")))
+        self.playButton.setFixedSize(32, 32)
+        self.playButton.setObjectName("playButton")
+        
+        # Slider de tempo
+        self.timeSlider = QSlider(Qt.Horizontal)
+        self.timeSlider.setRange(0, 0)
+        self.timeSlider.setObjectName("timeSlider")
+        
+        # Label de tempo
+        self.timeLabel = QLabel("00:00 / 00:00")
+        self.timeLabel.setObjectName("timeLabel")
+        
+        # Adiciona controles ao layout
+        self.controlLayout.addWidget(self.playButton)
+        self.controlLayout.addWidget(self.timeSlider)
+        self.controlLayout.addWidget(self.timeLabel)
+        
+        self.layout.addLayout(self.controlLayout)
+        
+    def setupConnections(self):
+        self.playButton.clicked.connect(self.togglePlayPause)
+        self.mediaPlayer.positionChanged.connect(self.positionChanged)
+        self.mediaPlayer.durationChanged.connect(self.durationChanged)
+        self.timeSlider.sliderMoved.connect(self.setPosition)
+        
+    @Slot()
+    def togglePlayPause(self):
+        if self.mediaPlayer.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.mediaPlayer.pause()
+            self.playButton.setIcon(QIcon(resource_path("assets/icons/play.svg")))
+        else:
+            self.mediaPlayer.play()
+            self.playButton.setIcon(QIcon(resource_path("assets/icons/pause.svg")))
+            
+    @Slot(int)
+    def positionChanged(self, position):
+        self.timeSlider.setValue(position)
+        current = self.formatTime(position)
+        total = self.formatTime(self.mediaPlayer.duration())
+        self.timeLabel.setText(f"{current} / {total}")
+        self.currentPosition = position
+        
+    @Slot(int)
+    def durationChanged(self, duration):
+        self.timeSlider.setRange(0, duration)
+        total = self.formatTime(duration)
+        current = self.formatTime(0)
+        self.timeLabel.setText(f"{current} / {total}")
+        
+    @Slot(int)
+    def setPosition(self, position):
+        self.mediaPlayer.setPosition(position)
+        
+    def setSource(self, url):
+        """Define a fonte do vídeo para reprodução"""
+        self.mediaPlayer.setSource(url)
+        
+    def getCurrentTime(self):
+        """Retorna a posição atual em milissegundos"""
+        return self.mediaPlayer.position()
+        
+    def formatTime(self, ms):
+        """Formata milissegundos para MM:SS"""
+        s = ms // 1000
+        m = s // 60
+        s = s % 60
+        return f"{m:02d}:{s:02d}"
+```
+
+3. **Integração na View:**
+
+```python name=views/edicoes_view.py
+# Importe no topo do arquivo
+from views.player_component import VideoPlayerComponent
+
+# Na classe EdicoesView, substitua o QLabel existente:
+self.videoPlayer = VideoPlayerComponent()
+self.ui.videoLayout.addWidget(self.videoPlayer)  # Assumindo que existe um layout para o vídeo
+
+# Método para carregar vídeo
+def loadVideo(self, video_url):
+    self.videoPlayer.setSource(video_url)
+    self.videoPlayer.togglePlayPause()  # Auto-play
+```
+
+## ✅ 2. Comentários Temporais
+
+### 🎯 Objetivo:
+Associar comentários ao timestamp do vídeo.
+
+### 🔧 Implementação no MelhorApp:
+
+1. **Atualização no modelo de comentários:**
+
+```python name=models/comment_model.py
+class Comment:
+    def __init__(self, id=None, text="", author="", timestamp=None, video_timestamp=0, is_resolved=False):
+        self.id = id
+        self.text = text
+        self.author = author
+        self.timestamp = timestamp  # Quando foi postado
+        self.video_timestamp = video_timestamp  # Posição do vídeo em ms
+        self.is_resolved = is_resolved
+        
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "text": self.text,
+            "author": self.author,
+            "timestamp": self.timestamp,
+            "video_timestamp": self.video_timestamp,
+            "is_resolved": self.is_resolved
+        }
+        
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            id=data.get("id"),
+            text=data.get("text", ""),
+            author=data.get("author", ""),
+            timestamp=data.get("timestamp"),
+            video_timestamp=data.get("video_timestamp", 0),
+            is_resolved=data.get("is_resolved", False)
+        )
+```
+
+2. **Atualização no componente de comentário:**
+
+```python name=views/comment_item.py
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
+from PySide6.QtCore import Qt, Signal
+from utils.style_sheets import get_style_sheet
+from datetime import datetime
+
+class CommentItem(QWidget):
+    goToTimestampRequested = Signal(int)
+    resolveRequested = Signal(str)  # ID do comentário
+    
+    def __init__(self, comment, is_editor=False, parent=None):
+        super().__init__(parent)
+        self.comment = comment
+        self.is_editor = is_editor
+        self.setupUi()
+        
+    def setupUi(self):
+        self.layout = QVBoxLayout(self)
+        
+        # Info do comentário (autor, timestamp)
+        self.infoLayout = QHBoxLayout()
+        
+        self.authorLabel = QLabel(self.comment.author)
+        self.authorLabel.setObjectName("authorLabel")
+        
+        # Formata o timestamp do vídeo como MM:SS
+        video_seconds = self.comment.video_timestamp // 1000
+        video_mins = video_seconds // 60
+        video_secs = video_seconds % 60
+        timestamp_str = f"{video_mins:02d}:{video_secs:02d}"
+        
+        self.timestampLabel = QLabel(f"em {timestamp_str}")
+        self.timestampLabel.setObjectName("timestampLabel")
+        
+        self.infoLayout.addWidget(self.authorLabel)
+        self.infoLayout.addWidget(self.timestampLabel)
+        self.infoLayout.addStretch()
+        
+        # Botões de ação
+        self.goToButton = QPushButton("Ir para momento")
+        self.goToButton.setObjectName("goToButton")
+        self.goToButton.clicked.connect(self.onGoToTimestamp)
+        
+        self.infoLayout.addWidget(self.goToButton)
+        
+        # Conteúdo do comentário
+        self.contentLabel = QLabel(self.comment.text)
+        self.contentLabel.setWordWrap(True)
+        self.contentLabel.setObjectName("contentLabel")
+        
+        # Layout para marcar como resolvido (apenas para editores)
+        self.resolveLayout = QHBoxLayout()
+        if self.is_editor and not self.comment.is_resolved:
+            self.resolveButton = QPushButton("Marcar como resolvido")
+            self.resolveButton.setObjectName("resolveButton")
+            self.resolveButton.clicked.connect(self.onResolveRequested)
+            self.resolveLayout.addStretch()
+            self.resolveLayout.addWidget(self.resolveButton)
+        elif self.comment.is_resolved:
+            self.resolvedLabel = QLabel("✓ Resolvido")
+            self.resolvedLabel.setObjectName("resolvedLabel")
+            self.layout.addWidget(self.resolvedLabel)
+            
+        # Adiciona tudo ao layout principal
+        self.layout.addLayout(self.infoLayout)
+        self.layout.addWidget(self.contentLabel)
+        self.layout.addLayout(self.resolveLayout)
+        
+        # Estilo
+        if self.comment.is_resolved:
+            self.setObjectName("resolvedComment")
+        else:
+            self.setObjectName("normalComment")
+        self.setStyleSheet(get_style_sheet("dracula"))
+        
+    def onGoToTimestamp(self):
+        self.goToTimestampRequested.emit(self.comment.video_timestamp)
+        
+    def onResolveRequested(self):
+        self.resolveRequested.emit(self.comment.id)
+```
+
+3. **Integração na View de Edições:**
+
+```python name=views/edicoes_view.py
+# Na função de adicionar comentário
+def addComment(self):
+    comment_text = self.ui.commentTextEdit.toPlainText()
+    if not comment_text.strip():
+        return
+        
+    # Obter a posição atual do vídeo
+    video_timestamp = self.videoPlayer.getCurrentTime()
+    
+    # Criar o objeto de comentário
+    comment = Comment(
+        id=str(uuid.uuid4()),  # Gerador de ID único
+        text=comment_text,
+        author=self.current_user.name,
+        timestamp=datetime.now(),
+        video_timestamp=video_timestamp,
+        is_resolved=False
+    )
+    
+    # Salvar no repositório
+    self.commentRepository.add_comment(comment, self.current_editing.id)
+    
+    # Adicionar à interface
+    self.displayComment(comment)
+    
+    # Limpar campo de texto
+    self.ui.commentTextEdit.clear()
+
+# Na função de exibir comentários, ordene por timestamp do vídeo
+def loadComments(self):
+    comments = self.commentRepository.get_comments_by_editing(self.current_editing.id)
+    # Ordena pelos timestamps do vídeo
+    comments.sort(key=lambda c: c.video_timestamp)
+    
+    # Limpa o layout atual
+    self.clearCommentsLayout()
+    
+    # Adiciona comentários ordenados
+    for comment in comments:
+        self.displayComment(comment)
+
+# Conecte os sinais dos comentários
+def displayComment(self, comment):
+    comment_item = CommentItem(
+        comment=comment,
+        is_editor=self.current_user.role == "editor",
+        parent=self.ui.commentsScrollAreaContents
+    )
+    
+    # Conectar sinais
+    comment_item.goToTimestampRequested.connect(self.goToVideoTimestamp)
+    comment_item.resolveRequested.connect(self.resolveComment)
+    
+    # Adicionar ao layout
+    self.ui.commentsLayout.addWidget(comment_item)
+    
+# Implementar função para ir ao timestamp
+def goToVideoTimestamp(self, timestamp):
+    self.videoPlayer.setPosition(timestamp)
+```
+
+## ✅ 3. Marcação de Comentário Resolvido
+
+### 🎯 Objetivo:
+Permitir que editores marquem comentários como resolvidos.
+
+### 🔧 Implementação no MelhorApp:
+
+```python name=repositories/comment_repository.py
+class CommentRepository:
+    def __init__(self, database):
+        self.db = database
+        
+    def add_comment(self, comment, editing_id):
+        # Implementação para adicionar comentário ao banco
+        
+    def get_comments_by_editing(self, editing_id):
+        # Implementação para buscar comentários
+        
+    def resolve_comment(self, comment_id):
+        """Marca um comentário como resolvido"""
+        # Exemplo de implementação
+        query = """
+            UPDATE comments 
+            SET is_resolved = 1 
+            WHERE id = ?
+        """
+        self.db.execute(query, (comment_id,))
+        self.db.commit()
+        return True
+```
+
+Na view:
+
+```python name=views/edicoes_view.py
+def resolveComment(self, comment_id):
+    """Marca um comentário como resolvido"""
+    success = self.commentRepository.resolve_comment(comment_id)
+    
+    if success:
+        # Recarregar comentários para refletir a mudança
+        self.loadComments()
+```
+
+## ✅ 4. Lista de Entregas Dinâmica
+
+### 🎯 Objetivo:
+Carregar dinamicamente as entregas do banco de dados.
+
+### 🔧 Implementação no MelhorApp:
+
+1. **Criação do repositório de entregas:**
+
+```python name=repositories/editing_repository.py
+class EditingRepository:
+    def __init__(self, database):
+        self.db = database
+        
+    def get_editings_by_event(self, event_id, editor_id=None):
+        """Busca entregas de edição por evento com filtro opcional por editor"""
+        query = """
+            SELECT e.id, e.title, e.status, e.video_url, e.thumbnail_url,
+                   e.created_at, e.due_date, e.approval_status, e.editor_id
+            FROM editor_deliveries e
+            WHERE e.event_id = ?
+        """
+        
+        params = [event_id]
+        
+        # Se especificado, filtra por editor
+        if editor_id:
+            query += " AND e.editor_id = ?"
+            params.append(editor_id)
+            
+        query += " ORDER BY e.due_date ASC"
+        
+        results = self.db.execute(query, params).fetchall()
+        
+        editings = []
+        for row in results:
+            editing = {
+                "id": row[0],
+                "title": row[1],
+                "status": row[2],
+                "video_url": row[3],
+                "thumbnail_url": row[4],
+                "created_at": row[5],
+                "due_date": row[6],
+                "approval_status": row[7],
+                "editor_id": row[8]
+            }
+            editings.append(editing)
+            
+        return editings
+```
+
+2. **Integração na view:**
+
+```python name=views/edicoes_view.py
+def loadEditingsList(self):
+    """Carrega a lista de edições para o evento atual"""
+    
+    self.ui.editingsList.clear()
+    
+    # Define o editor_id apenas se o usuário for editor
+    editor_id = None
+    if self.current_user.role == "editor":
+        editor_id = self.current_user.id
+    
+    editings = self.editingRepository.get_editings_by_event(
+        event_id=self.current_event.id,
+        editor_id=editor_id
+    )
+    
+    for editing in editings:
+        item = QListWidgetItem(editing["title"])
+        # Armazena o dicionário inteiro como UserRole
+        item.setData(Qt.UserRole, editing)
+        
+        # Define ícone com base no status de aprovação
+        if editing["approval_status"] == "approved":
+            item.setIcon(QIcon(resource_path("assets/icons/check.svg")))
+        elif editing["approval_status"] == "rejected":
+            item.setIcon(QIcon(resource_path("assets/icons/x-circle.svg")))
+        elif editing["status"] == "in_progress":
+            item.setIcon(QIcon(resource_path("assets/icons/clock.svg")))
+        elif editing["status"] == "completed":
+            item.setIcon(QIcon(resource_path("assets/icons/check-circle.svg")))
+            
+        self.ui.editingsList.addItem(item)
+```
+
+## ✅ 5. Submissão de Entregas
+
+### 🎯 Objetivo:
+Permitir que editores enviem entregas de edição.
+
+### 🔧 Implementação no MelhorApp:
+
+1. **Funcionalidade de submissão:**
+
+```python name=views/edicoes_view.py
+from PySide6.QtWidgets import QFileDialog, QInputDialog
+
+def submitEditing(self):
+    """Permite submeter uma nova versão da edição"""
+    if not self.current_editing or self.current_user.role != "editor":
+        return
+        
+    # Verifica se a edição está em progresso
+    if self.current_editing.get("status") != "in_progress":
+        QMessageBox.warning(
+            self,
+            "Não permitido",
+            "Apenas entregas em edição podem ser atualizadas."
+        )
+        return
+        
+    # Escolher entre arquivo ou link
+    options = ["Upload de arquivo", "Link externo"]
+    choice, ok = QInputDialog.getItem(
+        self,
+        "Tipo de submissão",
+        "Como deseja submeter sua entrega?",
+        options,
+        0,
+        False
+    )
+    
+    if not ok:
+        return
+        
+    if choice == options[0]:  # Upload de arquivo
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Selecionar arquivo de vídeo",
+            "",
+            "Arquivos de vídeo (*.mp4 *.mov *.avi)"
+        )
+        
+        if not file_path:
+            return
+            
+        # Aqui implementar o upload do arquivo para o servidor
+        # Simulando com um placeholder
+        video_url = self._uploadVideoFile(file_path)
+        
+    else:  # Link externo
+        link, ok = QInputDialog.getText(
+            self,
+            "Link da entrega",
+            "Cole o link da sua entrega (YouTube, Vimeo, etc):"
+        )
+        
+        if not ok or not link:
+            return
+            
+        video_url = link
+        
+    # Atualiza o status e link da entrega
+    success = self.editingRepository.update_editing_submission(
+        self.current_editing["id"],
+        video_url,
+        "waiting_approval"
+    )
+    
+    if success:
+        QMessageBox.information(
+            self,
+            "Sucesso",
+            "Sua entrega foi submetida e está aguardando aprovação."
+        )
+        
+        # Recarrega a lista e os detalhes
+        self.loadEditingsList()
+        self.loadEditingDetails(self.current_editing["id"])
+```
+
+2. **Atualização no repositório:**
+
+```python name=repositories/editing_repository.py
+def update_editing_submission(self, editing_id, video_url, status="waiting_approval"):
+    """Atualiza uma entrega com novo vídeo e status"""
+    query = """
+        UPDATE editor_deliveries 
+        SET video_url = ?, status = ?, approval_status = ?
+        WHERE id = ?
+    """
+    
+    try:
+        self.db.execute(query, (video_url, status, "waiting", editing_id))
+        self.db.commit()
+        return True
+    except Exception as e:
+        print(f"Erro ao atualizar entrega: {e}")
+        return False
+```
+
+## ✅ 6. Aprovação / Rejeição de Entregas
+
+### 🎯 Objetivo:
+Permitir que clientes aprovem ou rejeitem entregas com justificativa.
+
+### 🔧 Implementação no MelhorApp:
+
+```python name=views/edicoes_view.py
+def setupApprovalButtons(self):
+    """Configura os botões de aprovação/rejeição para clientes"""
+    if self.current_user.role != "client":
+        self.ui.approvalFrame.hide()
+        return
+        
+    self.ui.approveButton.clicked.connect(self.approveEditing)
+    self.ui.rejectButton.clicked.connect(self.rejectEditing)
+    
+    # Mostra os botões apenas para entregas aguardando aprovação
+    if self.current_editing and self.current_editing.get("approval_status") == "waiting":
+        self.ui.approvalFrame.show()
+    else:
+        self.ui.approvalFrame.hide()
+
+def approveEditing(self):
+    """Aprova a entrega atual"""
+    if not self.current_editing:
+        return
+        
+    reply = QMessageBox.question(
+        self,
+        "Confirmar aprovação",
+        "Tem certeza que deseja aprovar esta entrega?",
+        QMessageBox.Yes | QMessageBox.No,
+        QMessageBox.No
+    )
+    
+    if reply == QMessageBox.Yes:
+        success = self.editingRepository.update_approval_status(
+            self.current_editing["id"],
+            "approved"
+        )
+        
+        if success:
+            QMessageBox.information(
+                self,
+                "Sucesso",
+                "A entrega foi aprovada com sucesso!"
+            )
+            
+            # Recarrega a lista e os detalhes
+            self.loadEditingsList()
+            self.loadEditingDetails(self.current_editing["id"])
+
+def rejectEditing(self):
+    """Rejeita a entrega atual solicitando ajustes"""
+    if not self.current_editing:
+        return
+        
+    reason, ok = QInputDialog.getMultiLine(
+        self,
+        "Motivo da rejeição",
+        "Por favor, descreva os ajustes necessários:",
+        ""
+    )
+    
+    if ok and reason.strip():
+        success = self.editingRepository.update_approval_status(
+            self.current_editing["id"],
+            "rejected",
+            feedback=reason
+        )
+        
+        if success:
+            QMessageBox.information(
+                self,
+                "Enviado",
+                "A solicitação de ajustes foi enviada ao editor."
+            )
+            
+            # Recarrega a lista e os detalhes
+            self.loadEditingsList()
+            self.loadEditingDetails(self.current_editing["id"])
+```
+
+No repositório:
+
+```python name=repositories/editing_repository.py
+def update_approval_status(self, editing_id, status, feedback=None):
+    """Atualiza o status de aprovação de uma entrega"""
+    if status not in ["waiting", "approved", "rejected"]:
+        return False
+        
+    query = """
+        UPDATE editor_deliveries 
+        SET approval_status = ?
+        WHERE id = ?
+    """
+    
+    params = [status, editing_id]
+    
+    try:
+        self.db.execute(query, params)
+        
+        # Se foi rejeitado, registra o feedback
+        if status == "rejected" and feedback:
+            feedback_query = """
+                INSERT INTO editing_feedback (editing_id, feedback, created_at) 
+                VALUES (?, ?, datetime('now'))
+            """
+            self.db.execute(feedback_query, (editing_id, feedback))
+            
+        self.db.commit()
+        return True
+    except Exception as e:
+        print(f"Erro ao atualizar status de aprovação: {e}")
+        return False
+```
+
+## ✅ 7. Sincronização Visual de Comentários
+
+### 🎯 Objetivo:
+Destacar comentários de acordo com a posição atual do vídeo.
+
+### 🔧 Implementação no MelhorApp:
+
+```python name=views/edicoes_view.py
+def setupVideoSync(self):
+    """Configura a sincronização entre vídeo e comentários"""
+    # Timer para verificar a posição do player a cada segundo
+    self.syncTimer = QTimer(self)
+    self.syncTimer.setInterval(1000)  # 1 segundo
+    self.syncTimer.timeout.connect(self.checkCommentSync)
+    
+    # Inicia quando o vídeo estiver em reprodução
+    self.videoPlayer.mediaPlayer.playbackStateChanged.connect(self.handlePlaybackChange)
+    
+def handlePlaybackChange(self, state):
+    """Gerencia o timer baseado no estado de reprodução"""
+    if state == QMediaPlayer.PlaybackState.PlayingState:
+        self.syncTimer.start()
+    else:
+        self.syncTimer.stop()
+        
+def checkCommentSync(self):
+    """Verifica e destaca comentários próximos ao tempo atual do vídeo"""
+    if not self.videoPlayer or not hasattr(self, "commentItems"):
+        return
+        
+    current_pos = self.videoPlayer.getCurrentTime()
+    window_start = max(0, current_pos - 2000)  # 2 segundos antes
+    window_end = current_pos + 2000  # 2 segundos depois
+    
+    # Percorre os widgets de comentário
+    for i in range(self.ui.commentsLayout.count()):
+        item = self.ui.commentsLayout.itemAt(i).widget()
+        if isinstance(item, CommentItem):
+            is_active = window_start <= item.comment.video_timestamp <= window_end
+            
+            if is_active:
+                # Destaca o comentário
+                item.setProperty("active", True)
+                item.setStyleSheet(get_style_sheet("dracula_active_comment"))
+                
+                # Scroll para o comentário
+                self.ui.commentsScrollArea.ensureWidgetVisible(item)
+            else:
+                # Remove o destaque
+                item.setProperty("active", False)
+                item.setStyleSheet("")
+```
+
+## ✅ 8. Lista de Comentários Ordenada por Timestamp
+
+### 🎯 Objetivo:
+Manter os comentários ordenados por timestamp do vídeo.
+
+### 🔧 Implementação no MelhorApp:
+
+```python name=views/edicoes_view.py
+def loadComments(self):
+    """Carrega e exibe comentários ordenados por timestamp do vídeo"""
+    if not self.current_editing:
+        return
+        
+    comments = self.commentRepository.get_comments_by_editing(self.current_editing["id"])
+    
+    # Ordena por timestamp do vídeo
+    comments.sort(key=lambda c: c.video_timestamp)
+    
+    # Limpa o layout atual
+    self.clearCommentsLayout()
+    
+    # Armazena referências aos itens de comentários
+    self.commentItems = []
+    
+    # Adiciona comentários ordenados
+    for comment in comments:
+        item = CommentItem(
+            comment=comment,
+            is_editor=self.current_user.role == "editor"
+        )
+        
+        # Conecta sinais
+        item.goToTimestampRequested.connect(self.goToVideoTimestamp)
+        item.resolveRequested.connect(self.resolveComment)
+        
+        # Adiciona ao layout
+        self.ui.commentsLayout.addWidget(item)
+        self.commentItems.append(item)
+```
+
+## ✅ 9. Tela Responsiva
+
+### 🎯 Objetivo:
+Garantir que a interface seja responsiva em diferentes resoluções.
+
+### 🔧 Implementação no MelhorApp:
+
+```python name=views/edicoes_view.py
+def setupResponsiveLayout(self):
+    """Configura o layout responsivo da aba de edições"""
+    # Configurar QSplitter
+    self.ui.mainSplitter.setStretchFactor(0, 2)  # Área do vídeo
+    self.ui.mainSplitter.setStretchFactor(1, 1)  # Lista de comentários
+    
+    # Tamanhos mínimos
+    self.ui.videoFrame.setMinimumWidth(480)
+    self.ui.videoFrame.setMinimumHeight(270)
+    
+    self.ui.commentsFrame.setMinimumWidth(250)
+    
+    # Configuração para tela reduzida
+    screen_rect = QApplication.primaryScreen().availableGeometry()
+    if screen_rect.width() < 1024:
+        # Modo compacto
+        self.ui.mainSplitter.setOrientation(Qt.Vertical)
+    else:
+        # Modo normal
+        self.ui.mainSplitter.setOrientation(Qt.Horizontal)
+```
+
+## ✅ 10. Dados Dinâmicos
+
+### 🎯 Objetivo:
+Preencher o painel lateral de vídeos com dados reais do banco.
+
+### 🔧 Implementação no MelhorApp:
+
+```python name=views/edicoes_view.py
+def initView(self):
+    """Inicializa a view com dados dinâmicos"""
+    # Configura os repositórios
+    self.editingRepository = EditingRepository(self.db)
+    self.commentRepository = CommentRepository(self.db)
+    
+    # Carrega a lista de edições
+    self.loadEditingsList()
+    
+    # Conecta sinais
+    self.ui.editingsList.itemClicked.connect(self.onEditingItemClicked)
+    self.ui.commentButton.clicked.connect(self.addComment)
+    
+    # Configura botões de submissão/aprovação
+    if self.current_user.role == "editor":
+        self.ui.submitButton.show()
+        self.ui.submitButton.clicked.connect(self.submitEditing)
+    else:
+        self.ui.submitButton.hide()
+        
+    self.setupApprovalButtons()
+    self.setupVideoSync()
+    self.setupResponsiveLayout()
+    
+def onEditingItemClicked(self, item):
+    """Manipula o clique em um item da lista de edições"""
+    editing_data = item.data(Qt.UserRole)
+    if editing_data:
+        self.loadEditingDetails(editing_data["id"])
+        
+def loadEditingDetails(self, editing_id):
+    """Carrega os detalhes de uma edição específica"""
+    # Busca os detalhes completos da edição
+    editing = self.editingRepository.get_editing_by_id(editing_id)
+    
+    if not editing:
+        return
+        
+    self.current_editing = editing
+    
+    # Atualiza a interface com os detalhes
+    self.ui.titleLabel.setText(editing["title"])
+    self.ui.statusLabel.setText(self.formatStatus(editing["status"]))
+    
+    # Carrega o vídeo
+    if editing["video_url"]:
+        self.videoPlayer.setSource(QUrl(editing["video_url"]))
+        self.videoPlayer.mediaPlayer.play()
+    
+    # Carrega os comentários
+    self.loadComments()
+    
+    # Atualiza visibilidade dos botões de acordo com o status
+    self.updateActionButtons()
+```
+
+---
+
+## 📝 Considerações Finais
+
+1. **Estrutura de Dados**:
+   - Certifique-se de que seu banco de dados contém as tabelas necessárias: `editor_deliveries`, `comments` e `editing_feedback`.
+
+2. **Tema Dracula**:
+   - Todo o código fornecido já está preparado para receber o tema Dracula através da função `get_style_sheet`.
+
+3. **Integração Gradual**:
+   - Recomenda-se implementar as funcionalidades na ordem apresentada, pois existem dependências entre elas.
+
+4. **Testes**:
+   - Após implementar cada seção, faça testes para garantir seu funcionamento adequado antes de prosseguir.
+
+5. **Permissões por Papel**:
+   - O código já diferencia as permissões entre "editor" e "client", garantindo que apenas as ações permitidas sejam exibidas para cada tipo de usuário.
+
+Siga este manual para implementar todas as funcionalidades necessárias na aba "Edições" do projeto MelhorApp de maneira organizada e coerente com a estrutura atual do projeto.
