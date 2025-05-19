@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "GoNetwork AI",
+    "version": "1.0.0",
+    "theme": "dracula"
+  },
+  "database": {
+    "path": "./database/gonetwork.db"
+  },
+  "uploads": {
+    "path": "./uploads",
+    "max_size": 2048,
+    "allowed_types": ["image/jpeg", "image/png", "video/mp4", "audio/mpeg", "application/zip"]
+  },
+  "video": {
+    "default_quality": "720p",
+    "formats": ["mp4", "mov", "avi"]
+  },
+  "notifications": {
+    "enabled": true,
+    "check_interval": 60
+  }
+}

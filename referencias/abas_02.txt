@@ -1,0 +1,205 @@
+# Lista de abas a detalhar com base na estrutura de geral.txt
+abas_detalhadas = {
+    "aba_equipe.txt": """
+# GoNetwork AI – Detalhamento da Aba: Equipe
+
+## Visão Geral
+
+A aba **Equipe** é responsável por organizar os profissionais envolvidos no evento, vinculando funções, equipamentos e permissões. É alimentada pelo cadastro geral de talentos da plataforma, permitindo reaproveitamento em diferentes eventos.
+
+---
+
+## Funcionalidades
+
+### 👥 Lista de Profissionais
+- Exibe todos os membros selecionados para o evento atual.
+- Campos por membro:
+  - Nome completo
+  - Especialidade (ex: filmmaker, editor, diretor)
+  - Função no evento
+  - Contato
+  - Equipamentos designados
+
+### 🎯 Filtros inteligentes
+- Buscar por nome, especialidade ou função
+- Agrupamento por tipo de função (ex: todos os editores juntos)
+
+### 🛠️ Equipamentos Atribuídos
+- Para cada membro, lista de equipamentos (vinda do inventário geral)
+- Visualização de estado e acessórios do equipamento
+
+### ✅ Permissões Definidas
+- Cada membro recebe permissões baseadas no papel:
+  - Ex: editores têm acesso à aba de Edições
+  - Ex: assistentes não acessam entregas
+
+---
+
+## Integração com Outras Abas
+- **Briefing**: editor responsável por entregas específicas
+- **Patrocinadores**: responsável pela captação de ações específicas
+- **Edições**: determina quem edita o quê
+
+---
+
+## Controles e Ações
+- Botão: `+ Adicionar Membro`
+- Opção de duplicar equipe de evento anterior
+- Validação automática de conflitos de disponibilidade
+
+---
+
+## Banco de Dados Relacionado
+- `team_members`
+- `event_team`
+- `equipment_allocations`
+""",
+
+    "aba_briefing.txt": """
+# GoNetwork AI – Detalhamento da Aba: Briefing
+
+## Visão Geral
+
+A aba **Briefing** concentra todas as informações conceituais e operacionais do evento. Ela define o estilo, referências visuais, patrocinadores, ativações, programação e entregas. Serve como fonte de dados para todas as demais abas do sistema.
+
+---
+
+## Abas Internas
+
+### 📝 Informações Gerais, Estilo e Referências
+- Campos de texto multilinha:
+  - Descrição geral do evento
+  - Tom da comunicação
+  - Paleta visual, músicas de referência
+  - Exigências do contratante
+
+---
+
+### 🏷️ Aba Patrocinadores
+
+#### Organização
+- Cada patrocinador listado apenas uma vez
+- Cada um pode ter múltiplas ações/ativações
+
+#### Campos por Ativação:
+| Campo                    | Componente         |
+|--------------------------|--------------------|
+| Ação/Ativação            | `QLineEdit`        |
+| Horário de captação      | `QTimeEdit` + `QCheckBox` |
+| Responsável pela captação| `QComboBox` (lista equipe) |
+| Entrega em tempo real?   | `QCheckBox`        |
+| Horário da entrega RT    | `QTimeEdit`        |
+| Editor responsável       | `QComboBox`        |
+| Orientações              | `QTextEdit`        |
+
+---
+
+### 🎤 Aba Programação
+
+#### Organização
+- Lista de atrações por palco
+- Cada palco pode ter várias atrações
+
+#### Campos:
+| Campo         | Componente    |
+|---------------|----------------|
+| Palco         | `QComboBox` ou `QLineEdit` |
+| Artista       | `QLineEdit`   |
+| Horário       | `QTimeEdit`   |
+| Observações   | `QTextEdit`   |
+
+---
+
+### 📦 Aba Entregas
+
+#### Bloco Real Time
+- Lista de entregas durante o evento com:
+  - Título
+  - Horário
+  - Editor responsável
+  - Plataforma de destino (Stories, Feed, Reels)
+  - Orientações
+
+#### Bloco Pós-Evento
+- Deadline geral (horas/dias)
+- Tipos de entrega:
+  - Aftermovie
+  - Versões por patrocinador
+  - Vídeo dos melhores momentos
+- Campo de anotações finais
+
+---
+
+## Integrações
+- Alimenta diretamente a aba de Edições
+- Gera automaticamente a timeline do evento
+
+## Banco de Dados Relacionado
+- `briefings`
+- `sponsors`
+- `program_schedule`
+- `deliverables`
+""",
+
+    "aba_timeline.txt": """
+# GoNetwork AI – Detalhamento da Aba: Timeline
+
+## Visão Geral
+
+A aba **Timeline** é gerada automaticamente a partir dos dados das abas de Briefing, Programação e Patrocinadores. Ela apresenta uma linha do tempo visual interativa de tudo que ocorre no evento.
+
+---
+
+## Funcionalidades
+
+### 🧠 Geração Inteligente
+- Botão: `Gerar Timeline`
+- Coleta dados de:
+  - Captações de patrocinadores
+  - Horários de atrações
+  - Entregas real time
+- Organiza tudo em sequência cronológica
+
+---
+
+### 👁️ Visualização Interativa
+- Zoom com escalas (minutos, horas, dias)
+- Agrupamento por tipo:
+  - Captação
+  - Edição
+  - Entrega
+
+### 🎯 Filtros
+- Por membro responsável
+- Por tipo de atividade
+- Por patrocinador ou editor
+
+---
+
+### 🚨 Detecção de Conflitos
+- Alerta de sobreposições críticas
+- Alerta de entregas simultâneas
+- Notificações para carga excessiva por membro
+
+---
+
+## Recursos Extras
+- Drag & drop para reordenar
+- Histórico de alterações
+- Codificação por cores: verde (ok), vermelho (atrasado), cinza (em andamento)
+
+## Banco de Dados Relacionado
+- `timeline_events`
+- `event_tasks`
+- `timeline_history`
+""",
+}
+
+# Criar arquivos para cada aba na pasta referencias
+paths = []
+for filename, content in abas_detalhadas.items():
+    path = ref_dir / filename
+    path.write_text(content.strip(), encoding="utf-8")
+    paths.append(path.name)
+
+paths

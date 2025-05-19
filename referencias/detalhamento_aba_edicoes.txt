@@ -1,0 +1,105 @@
+from pathlib import Path
+
+# Criar arquivos separados detalhando cada aba
+ref_dir = Path("/mnt/data/referencias")
+ref_dir.mkdir(parents=True, exist_ok=True)
+
+# Arquivo detalhado da ABA EDIÇÕES com base em aba_edicoes.txt e geral.txt
+aba_edicoes_detalhada = """
+# GoNetwork AI – Detalhamento da Aba: Edições de Vídeo
+
+## Visão Geral
+
+A aba de **Edições de Vídeo** centraliza todas as entregas criadas com base no briefing do evento e na equipe cadastrada, especialmente os editores. Cada editor visualiza apenas suas entregas atribuídas, e o cliente associado ao evento pode comentar em tempo real com marcação de tempo.
+
+Essa aba **não é manual**: ela é alimentada diretamente pelos dados das abas “Briefing” e “Equipe” associadas ao evento atual.
+
+---
+
+## Funcionalidades Principais
+
+### 🎬 Reprodutor de Vídeo com Comentários Temporais
+
+- Utiliza `QMediaPlayer` + `QVideoWidget` (PySide6).
+- Interface com:
+  - Player com botões Play, Pause, Stop.
+  - Slider de tempo sincronizado.
+  - Tempo atual / Duração exibidos.
+- Botão “Adicionar Comentário” salva:
+  - Timestamp atual (ex: 02:13)
+  - Texto digitado
+  - Usuário autor do comentário
+- Comentários exibidos com:
+  - Nome do autor
+  - Tempo marcado
+  - Status: Pendente / Resolvido
+  - Botão “Marcar como resolvido” (somente para editores)
+
+---
+
+### 📋 Lista de Entregas por Editor
+
+- Apresentada ao lado direito da tela.
+- Cada entrega exibe:
+  - Título
+  - Status (Em edição, Pendente, Entregue)
+  - Deadline
+  - Botão: Ver detalhes ou Submeter entrega
+- Pode conter múltiplas entregas para um mesmo editor, vindas do briefing.
+- Integração com aba de Entregas (dados herdados).
+
+---
+
+### 📁 Submissão de Entregas
+
+- Botão "Submeter" permite:
+  - Adicionar link ou arquivo da entrega
+  - Atualizar status para "Aguardando Aprovação"
+- Cliente vê botão "Aprovar" ou "Rejeitar"
+- Histórico de status salvo na tabela `editor_deliveries`
+
+---
+
+## Integração com Outras Abas
+
+- **Briefing**:
+  - Define o que será entregue (after movie, stories, etc)
+  - Alimenta automaticamente a criação das edições
+- **Equipe**:
+  - Associa o editor responsável à entrega
+- **Cliente**:
+  - Associado via `client_id` no evento, com permissão de visualizar e comentar
+
+---
+
+## Banco de Dados
+
+- `video_edits` → controle da edição
+- `video_comments` → comentários por timestamp
+- `editor_deliveries` → submissão, status e controle de aprovação
+
+---
+
+## Permissões
+
+| Papel       | Acesso à Aba | Pode comentar | Pode aprovar |
+|-------------|---------------|----------------|----------------|
+| Editor      | Sim           | Sim            | Não             |
+| Cliente     | Sim           | Sim            | Sim             |
+| Coordenador | Sim           | Sim            | Sim             |
+| Admin       | Sim           | Sim            | Sim             |
+
+---
+
+## Observações Técnicas
+
+- Totalmente compatível com o tema Dracula
+- Suporte futuro para sincronização em tempo real via WebSocket
+- Possibilidade de exportação de comentários via `.json` ou `.pdf` para fluxo offline
+"""
+
+# Salvar arquivo da aba edições
+aba_edicoes_path = ref_dir / "detalhamento_aba_edicoes.txt"
+aba_edicoes_path.write_text(aba_edicoes_detalhada.strip(), encoding="utf-8")
+
+aba_edicoes_path.name

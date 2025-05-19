@@ -1,0 +1,224 @@
+ **Relatório Detalhado e Robusto das Abas "Briefing" e "Timeline"** do sistema **GoNetwork AI**, abordando sua lógica, contexto funcional, estrutura interna e dinâmica de operação. Este relatório consolida e cruza informações dos documentos `abas_01.txt`, `abas_02.txt`, `geral.txt` e demais arquivos estruturais do sistema.
+
+---
+
+# 📋 **1. Aba "Briefing" – Núcleo Estratégico do Evento**
+
+## 🧠 **Finalidade**
+
+A aba Briefing é o **centro neurálgico** da configuração de um evento audiovisual. É nela que são definidos todos os elementos que irão guiar:
+
+* A captação de imagens
+* O planejamento da equipe
+* As entregas
+* E a geração da **Timeline automatizada**
+
+> Ela atua como a fonte primária de dados para múltiplos módulos.
+
+---
+
+## 🧩 **Estrutura Modular**
+
+A aba Briefing é composta por **sub-abas especializadas**, cada uma lidando com um eixo crítico do evento:
+
+### 1.1 📝 Informações Gerais, Estilo e Referências
+
+* Campos de texto multilinha
+* Detalhes sobre:
+
+  * Tom de comunicação
+  * Estética do vídeo
+  * Músicas e elementos visuais de referência
+  * Requisitos do contratante
+
+---
+
+### 1.2 🏷️ Patrocinadores
+
+* Lista **única e dinâmica** de patrocinadores
+* Cada patrocinador pode ter múltiplas **ações** (atividades como ativações, captações, entregas específicas)
+
+#### Campos por Ação:
+
+| Campo                     | Componente                                |
+| ------------------------- | ----------------------------------------- |
+| Nome da Ação/Ativação     | `QLineEdit`                               |
+| Horário de Captação       | `QTimeEdit` + `QCheckBox` (Horário Livre) |
+| Responsável pela Captação | `QComboBox` (equipe vinculada)            |
+| Entrega Real Time         | `QCheckBox`                               |
+| Horário da Entrega RT     | `QTimeEdit` (condicional)                 |
+| Editor Responsável        | `QComboBox`                               |
+| Orientações Específicas   | `QTextEdit`                               |
+
+---
+
+### 1.3 🎤 Programação de Palcos e Atrações
+
+* Lista de atrações organizadas por palco
+* Permite:
+
+  * Criação de múltiplos palcos
+  * Atribuição de artistas e horários específicos
+
+| Campo       | Tipo        |
+| ----------- | ----------- |
+| Palco       | `QLineEdit` |
+| Atração     | `QLineEdit` |
+| Horário     | `QTimeEdit` |
+| Observações | `QTextEdit` |
+
+---
+
+### 1.4 📦 Entregas do Evento
+
+#### Bloco 1: Real Time
+
+* Lista de entregas com:
+
+  * Título (`QLineEdit`)
+  * Horário (`QTimeEdit`)
+  * Editor responsável (`QComboBox`)
+  * Plataformas de destino (`CheckBoxes`: Reels, Feed, Stories)
+  * Orientações específicas (`QTextEdit`)
+
+#### Bloco 2: Pós-Evento
+
+* Deadline geral (`QSpinBox` + unidade)
+* Tipos de entrega:
+
+  * Aftermovie
+  * Highlights
+  * Versões por patrocinador
+* Campo de anotações finais
+
+---
+
+## 🔄 Integrações com Outras Abas
+
+* **Edições**: A aba Briefing **alimenta automaticamente** a criação das entregas por editor.
+* **Timeline**: Serve como base para a geração **automática** do cronograma.
+* **Equipe**: Os responsáveis definidos aqui vêm da aba de equipe.
+
+---
+
+## 🔐 Permissões
+
+| Papel       | Pode Editar Briefing? |
+| ----------- | --------------------- |
+| Admin       | Sim                   |
+| Coordenador | Sim                   |
+| Editor      | Não                   |
+| Cliente     | Não                   |
+
+---
+
+# 📆 **2. Aba "Timeline" – Visualização Cronológica do Evento**
+
+## 🧠 **Finalidade**
+
+Transformar os dados operacionais do Briefing em uma visualização **cronológica e interativa** que organiza todas as ações do evento em uma linha do tempo clara, evitando conflitos e facilitando o planejamento em tempo real.
+
+---
+
+## 🧱 **Estrutura Lógica**
+
+* Baseada em **blocos de atividade**
+* Cada bloco contém:
+
+  * Tipo da ação (captação, edição, entrega)
+  * Horário
+  * Responsável (com avatar)
+  * Status atual
+
+---
+
+## 🧰 **Funcionalidades Principais**
+
+### 2.1 🧠 Geração Automática
+
+* Botão “Gerar Timeline”
+* Captura dados diretamente de:
+
+  * Patrocinadores → Captação e entrega RT
+  * Programação → Atrações
+  * Entregas → Pós-evento e real time
+
+---
+
+### 2.2 👁️ Visualização Interativa
+
+* Agrupamento por tipo de tarefa:
+
+  * Captação 🎥
+  * Edição ✂️
+  * Entrega 📦
+* Interface com:
+
+  * Zoom temporal (hora, bloco, dia)
+  * Cores e ícones por tipo
+  * Exibição de responsável e status
+
+---
+
+### 2.3 🔍 Filtros e Conflitos
+
+* Filtros por:
+
+  * Membro responsável
+  * Tipo de tarefa
+* Alerta de:
+
+  * **Conflitos de horário**
+  * Sobrecarga de tarefas
+  * Tarefas simultâneas para a mesma pessoa
+
+---
+
+### 2.4 ✋ Ajustes Manuais
+
+* Reorganização via Drag & Drop
+* Redistribuição de atividades entre membros
+* Alertas de inviabilidade temporal
+
+---
+
+### 2.5 📨 Exportação e Compartilhamento
+
+* Exportação em:
+
+  * PDF, CSV, JSON, iCalendar, PNG
+* Compartilhamento via:
+
+  * Link público
+  * QR Code
+  * E-mail com mensagem personalizada
+
+---
+
+## 🔄 Integrações
+
+* **Briefing**: Única fonte de dados
+* **Equipe**: Responsáveis atribuídos às tarefas
+* **Edições**: Vincula entregas a sessões de edição e feedback
+
+---
+
+## 🔐 Permissões
+
+| Papel       | Pode Gerar/Editar Timeline? |
+| ----------- | --------------------------- |
+| Admin       | Sim                         |
+| Coordenador | Sim                         |
+| Editor      | Não                         |
+| Cliente     | Somente visualização        |
+
+---
+
+# 🔚 **Conclusão Técnica**
+
+As abas **Briefing** e **Timeline** formam um ciclo contínuo de planejamento e execução:
+
+* O **Briefing** define o que, quando e como cada tarefa será feita.
+* A **Timeline** traduz isso visualmente, permitindo controle, previsão e organização do evento.
+* A integração entre ambas elimina redundâncias e aumenta a produtividade da equipe audiovisual em campo e na edição.
+

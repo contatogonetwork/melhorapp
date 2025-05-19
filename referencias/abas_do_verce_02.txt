@@ -1,0 +1,151 @@
+from pathlib import Path
+
+# Caminho do novo relatório completo (recriado após reset)
+relatorio_completo_path = Path("/mnt/data/relatorio_completo_abas_video_timeline_integrado.txt")
+
+# Reescrevendo o conteúdo após o reset
+relatorio_integrado = """
+# Relatório Técnico Integrado: Estrutura e Dinâmica das Abas "Vídeo", "Timeline" e Conectadas – GoNetwork AI
+
+---
+
+## Introdução
+
+Este relatório técnico apresenta uma visão aprofundada das funcionalidades interligadas do sistema GoNetwork AI, focando nas abas de **edição de vídeo**, **timeline de eventos**, **anotação colaborativa**, **aprovação**, **upload**, **compartilhamento**, **exportação** e **gestão integrada de fluxo audiovisual**. Os dados são baseados nos arquivos fornecidos, que abrangem múltiplas telas e camadas da aplicação.
+
+---
+
+## 1. Aba de Edição de Vídeo (Revisão)
+
+### Finalidade
+Centraliza a visualização, feedback, histórico e controle de versões dos vídeos editados. Permite a aprovação ou rejeição das entregas.
+
+### Componentes principais
+- Visualização do vídeo enviado, com overlay de anotações, thumbnails e contadores de feedback.
+- Aba de comentários, com suporte a marcação temporal (`#00:35`) e identificação por autor.
+- Painel lateral com metadados: título, descrição, editor, status, versão, deadline.
+- Histórico de versões exibido em ordem cronológica, com alterações descritas.
+- Botões de ação: "Aprovar", "Rejeitar", "Editar Anotações", "Enviar Nova Versão".
+- Diálogos de confirmação para aprovação e rejeição com campos de justificativa.
+
+---
+
+## 2. Aba de Anotação de Vídeo
+
+### Finalidade
+Permite que editores, coordenadores e clientes adicionem anotações visuais e comentários diretamente sobre o vídeo.
+
+### Ferramentas disponíveis
+- Retângulo, círculo, seta, texto, desenho livre, marcador de comentário.
+- Interface com tela dividida entre vídeo e painel de instruções ou colaboradores.
+- Detecção automática de mudanças não salvas.
+- Teclas de atalho: espaço, esc, delete, setas.
+- Feedback visual com avatares e nome do autor para cada anotação.
+
+### Colaboradores
+Painel lateral mostra participantes do evento com avatar, cargo, último acesso e número de anotações.
+
+---
+
+## 3. Aba de Compartilhamento de Edição
+
+### Finalidade
+Permite exportar ou compartilhar uma versão específica do vídeo para redes sociais ou plataformas específicas.
+
+### Funcionalidades
+- Botão “Compartilhar diretamente” com metadados do vídeo.
+- Abas “Editar para Redes Sociais” e “Exportar”.
+- Botões de exportação por plataforma (Instagram, YouTube, TikTok, LinkedIn, etc).
+- Suporte a formatos específicos: Feed, Stories, Reels, Shorts, HD, 4K.
+
+---
+
+## 4. Aba de Upload de Nova Edição
+
+### Finalidade
+Permite aos editores subir novas versões de vídeos e descrever seus metadados.
+
+### Funcionalidades
+- Seção de upload com barra de progresso e verificação do tipo de arquivo.
+- Campos para título, descrição, tipo (aftermovie, patrocinador, stories...), deadline e observações.
+- Pré-visualização do arquivo após upload.
+- Botão de envio com validação condicional (arquivo válido, preenchimento mínimo).
+
+---
+
+## 5. Aba de Central de Edições
+
+### Finalidade
+Exibe todas as edições criadas para o evento, com filtros por tipo e status.
+
+### Estrutura
+- Contadores totais por status (pendente, em revisão, aprovado).
+- Filtros inteligentes: por tipo de vídeo e status de revisão.
+- Visualização em grade ou lista.
+- Acesso direto a cada item para revisão ou anotação.
+
+---
+
+## 6. Aba de Briefing
+
+### Finalidade
+Centraliza informações conceituais do evento, servindo como base para geração de cronograma (timeline) e entregas.
+
+### Abas internas
+- Informações Gerais
+- Patrocinadores (ações, horários, responsáveis)
+- Programação (palcos, artistas, horários)
+- Entregas (real time e pós-evento)
+- Estilo (paleta de cores, identidade)
+- Referências (visuais e textuais)
+
+### Comportamento
+- Botão “Salvar Briefing”
+- Validação de completude para habilitar “Gerar Timeline”
+
+---
+
+## 7. Aba de Timeline do Evento
+
+### Finalidade
+Apresenta graficamente todas as ações do evento, organizadas por dias e horários.
+
+### Itens exibidos
+- Captações (filmagens)
+- Edições (montagens, teasers, reels)
+- Entregas (stories, aftermovie, reels patrocinador)
+
+### Estrutura visual
+- Tabs por dia do evento (Dia 1, Dia 2, Dia 3)
+- Botões para alternar entre visualização por dia ou por hora
+- Cartões com título, horário, responsável, tipo e status
+- Ícones e cores para identificação visual imediata
+
+---
+
+## 8. Exportação e Compartilhamento da Timeline
+
+### Recursos
+- **Exportação**: em PDF, CSV, JSON, iCalendar (.ics), PNG.
+  - Permite incluir ou ocultar descrições, responsáveis e status.
+  - Nome do arquivo personalizável.
+  - Visualização prévia com simulação.
+- **Compartilhamento**:
+  - Link direto
+  - QR Code
+  - Email com campo de mensagem
+  - Feedback visual de sucesso
+
+---
+
+## Conclusão Integrada
+
+O conjunto de funcionalidades avaliadas compõe um sistema robusto, modular e coeso para **gerenciamento audiovisual de eventos em tempo real**. A lógica de fluxo orientado por evento garante que cada etapa (do briefing à entrega final) esteja conectada de forma automática e colaborativa.
+
+As abas de vídeo e timeline, complementadas pelas interfaces de upload, aprovação, anotação e compartilhamento, compõem um ecossistema que **integra edição, coordenação e revisão**, com suporte tanto a workflows em rede quanto offline.
+"""
+
+# Salvar novamente após reset
+relatorio_completo_path.write_text(relatorio_integrado.strip(), encoding="utf-8")
+
+relatorio_completo_path.name

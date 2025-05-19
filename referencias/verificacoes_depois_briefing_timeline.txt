@@ -1,0 +1,209 @@
+# Diagnóstico de Implementação: Módulos de Briefing e Timeline - GoNetwork AI
+
+## Escopo de Verificação
+
+Execute este diagnóstico completo para validar a implementação dos módulos de Briefing e Timeline no sistema GoNetwork AI. Este processo verificará a integridade entre camadas e garantirá que todos os componentes estejam interagindo conforme especificado.
+
+## 1. Verificação de Estrutura de Arquivos
+
+```bash
+# Valide a existência dos arquivos relacionados ao briefing e timeline
+ls -l database/BriefingRepository.py
+ls -l gui/widgets/briefing_widget.py
+ls -l gui/widgets/timeline_widget.py
+ls -l database/schema/briefing_tables.sql
+```
+
+## 2. Verificação de Banco de Dados
+
+```bash
+# Execute este comando para verificar se as tabelas foram criadas corretamente
+python -c "
+from database.Database import Database
+db = Database()
+tables = db.fetch_all(\"\"\"
+    SELECT name FROM sqlite_master 
+    WHERE type='table' AND (
+        name='briefings' OR 
+        name='briefing_items' OR 
+        name='timeline_events'
+    )
+\"\"\")
+print('Tabelas de briefing/timeline encontradas:', [t[0] for t in tables])
+print('Status: ' + ('OK' if len(tables) >= 2 else 'INCOMPLETO'))
+"
+```
+
+## 3. Verificação de Integração
+
+```bash
+# Verifique referências entre os módulos
+python -c "
+import sys
+from importlib import import_module
+from pathlib import Path
+
+def check_import(module_path):
+    try:
+        mod = import_module(module_path)
+        print(f'✓ {module_path}: Importado com sucesso')
+        return mod
+    except Exception as e:
+        print(f'✗ {module_path}: Erro - {str(e)}')
+        return None
+
+def check_attr(module, attr_name):
+    if hasattr(module, attr_name):
+        print(f'  ✓ {attr_name}: Encontrado')
+        return True
+    else:
+        print(f'  ✗ {attr_name}: Não encontrado')
+        return False
+
+# Verificar repositórios
+briefing_repo = check_import('database.BriefingRepository')
+if briefing_repo:
+    check_attr(briefing_repo, 'BriefingRepository')
+    
+# Verificar widgets
+briefing_widget = check_import('gui.widgets.briefing_widget')
+timeline_widget = check_import('gui.widgets.timeline_widget')
+if briefing_widget:
+    check_attr(briefing_widget, 'BriefingWidget')
+if timeline_widget:
+    check_attr(timeline_widget, 'TimelineWidget')
+
+# Verificar referência no main_window.py
+main_window_path = Path('gui/main_window.py')
+if main_window_path.exists():
+    with open(main_window_path, 'r') as f:
+        content = f.read()
+        if 'from gui.widgets.briefing_widget import BriefingWidget' in content:
+            print('✓ MainWindow: Importação de BriefingWidget encontrada')
+        else:
+            print('✗ MainWindow: Importação de BriefingWidget não encontrada')
+            
+        if 'from gui.widgets.timeline_widget import TimelineWidget' in content:
+            print('✓ MainWindow: Importação de TimelineWidget encontrada')
+        else:
+            print('✗ MainWindow: Importação de TimelineWidget não encontrada')
+            
+        if 'BriefingWidget()' in content and 'TimelineWidget()' in content:
+            print('✓ MainWindow: Instanciação dos widgets encontrada')
+        else:
+            print('✗ MainWindow: Instanciação dos widgets incompleta')
+"
+```
+
+## 4. Verificação de Funcionalidade da Interface
+
+```python
+# Execute este tester interativo para validar a interface de briefing
+python -c "
+try:
+    from PySide6.QtWidgets import QApplication
+    from gui.widgets.briefing_widget import BriefingWidget
+    import sys
+    
+    app = QApplication(sys.argv)
+    widget = BriefingWidget()
+    widget.show()
+    
+    print('===== DIAGNÓSTICO DE INTERFACE: BRIEFING =====')
+    print('✓ Widget de Briefing inicializado com sucesso')
+    print('Componentes encontrados:')
+    print(f'  - Seletor de evento: {"Sim" if hasattr(widget, "event_selector") else "Não"}')
+    print(f'  - Editor de briefing: {"Sim" if hasattr(widget, "briefing_editor") else "Não"}')
+    print('===========================================')
+    print('Por favor, verifique visualmente se a interface foi aberta corretamente.')
+    
+    sys.exit(app.exec())
+except Exception as e:
+    print(f'ERRO: {str(e)}')
+"
+```
+
+```python
+# Execute este tester interativo para validar a interface de timeline
+python -c "
+try:
+    from PySide6.QtWidgets import QApplication
+    from gui.widgets.timeline_widget import TimelineWidget
+    import sys
+    
+    app = QApplication(sys.argv)
+    widget = TimelineWidget()
+    widget.show()
+    
+    print('===== DIAGNÓSTICO DE INTERFACE: TIMELINE =====')
+    print('✓ Widget de Timeline inicializado com sucesso')
+    print('Componentes encontrados:')
+    print(f'  - Visualizador de timeline: {"Sim" if hasattr(widget, "timeline_view") else "Não"}')
+    print(f'  - Controles de data/hora: {"Sim" if hasattr(widget, "date_controls") else "Não"}')
+    print('===========================================')
+    print('Por favor, verifique visualmente se a interface foi aberta corretamente.')
+    
+    sys.exit(app.exec())
+except Exception as e:
+    print(f'ERRO: {str(e)}')
+"
+```
+
+## 5. Verificação do Fluxo Completo
+
+1. Inicie o aplicativo: `python main.py`
+2. Faça login com o usuário `contatogonetworknao` ou credenciais administrativas
+3. Valide o fluxo de trabalho para briefing:
+   - Navegue até a aba de Briefing
+   - Selecione um evento existente
+   - Crie ou edite itens de briefing
+   - Verifique se os dados são salvos corretamente
+
+4. Valide o fluxo de trabalho para timeline:
+   - Navegue até a aba de Timeline
+   - Selecione um evento
+   - Visualize os itens da timeline
+   - Adicione ou modifique itens da timeline
+   - Verifique a integração com eventos e briefings
+
+## 6. Análise de Resistência a Falhas
+
+Execute as seguintes operações para verificar a robustez:
+
+1. Tente criar um briefing para um evento inexistente
+2. Tente navegar entre eventos diferentes e verifique se os dados são atualizados corretamente
+3. Verifique a consistência temporal da timeline (verificação de sobreposições, validação de data/hora)
+4. Teste o comportamento quando não há eventos disponíveis
+
+## 7. Verificação de Timestamp e Persistência
+
+Execute o seguinte teste para validar o tratamento de datas e persistência:
+
+```python
+# Teste de timestamp e persistência
+python -c "
+from database.BriefingRepository import BriefingRepository
+from database.EventRepository import EventRepository
+import datetime
+
+# Verificar persistência com timestamp
+current_time = datetime.datetime(2025, 5, 19, 4, 19, 51)  # Usando o timestamp fornecido
+print(f'Verificando persistência com timestamp: {current_time}')
+
+# Verificar eventos próximos à data especificada
+event_repo = EventRepository()
+upcoming_events = event_repo.find_upcoming_events(5)  # Próximos 5 eventos
+print(f'Eventos próximos encontrados: {len(upcoming_events)}')
+
+# Verificar briefings desses eventos
+if upcoming_events:
+    briefing_repo = BriefingRepository()
+    for event in upcoming_events[:2]:  # Testar apenas os 2 primeiros
+        briefings = briefing_repo.get_briefing_by_event(event['id'])
+        print(f'Evento: {event[\"name\"]} - Briefings: {len(briefings) if briefings else 0}')
+"
+```
+
+---
+
+Se todos os testes forem concluídos com sucesso, a implementação dos módulos de Briefing e Timeline está pronta para uso em produção. Caso contrário, os logs e mensagens de erro fornecerão orientações para as correções necessárias.

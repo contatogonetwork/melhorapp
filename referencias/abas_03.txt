@@ -1,0 +1,260 @@
+from pathlib import Path
+
+# Recriar a pasta de referências após o reset do ambiente
+ref_dir = Path("/mnt/data/referencias")
+ref_dir.mkdir(parents=True, exist_ok=True)
+
+# Regerar os arquivos detalhados restantes
+abas_extras = {
+    "detalhamento_aba_entregas.txt": """
+# GoNetwork AI – Detalhamento da Aba: Entregas
+
+## Visão Geral
+
+A aba de **Entregas** é usada para definir as entregas específicas que serão feitas durante o evento. Ela se divide em duas seções: **Real Time** (durante o evento) e **Pós-Evento** (conteúdo final).
+
+Essas entregas alimentam diretamente a aba de **Edições**, que transforma essas informações em vídeos editáveis, associados a cada editor.
+
+---
+
+## Estrutura
+
+### 🚨 Bloco Real Time
+- Lista de entregas que devem ser feitas ao longo do evento.
+- Campos por entrega:
+  - Título (`QLineEdit`)
+  - Horário de entrega (`QTimeEdit`)
+  - Editor responsável (`QComboBox`)
+  - Plataformas de destino (`QGroupBox` com checkboxes: Reels, Stories, Feed)
+  - Orientações (`QTextEdit`)
+
+### 📦 Bloco Pós-Evento
+- Prazo para entregas finais (`QSpinBox` + unidade de tempo)
+- Tipos de pacotes selecionáveis (`QCheckBox`):
+  - Aftermovie
+  - Melhores Momentos
+  - Versões individuais por patrocinador
+- Campo adicional de anotações
+
+---
+
+## Integrações
+
+- Alimenta a aba **Edições** com os vídeos que deverão ser postados
+- Alimenta a aba **Timeline** com os prazos e horários de cada entrega
+- Integra com a aba **Equipe** para atribuir o editor
+
+---
+
+## Banco de Dados Envolvido
+
+- `deliverables` (estrutura da entrega)
+- `editor_assignments` (ligação com o editor)
+
+---
+
+## Permissões
+
+| Papel       | Pode criar entregas? |
+|-------------|----------------------|
+| Admin       | Sim                  |
+| Coordenador | Sim                  |
+| Editor      | Não                  |
+| Cliente     | Não                  |
+""",
+
+    "detalhamento_aba_assets.txt": """
+# GoNetwork AI – Detalhamento da Aba: Biblioteca de Assets
+
+## Visão Geral
+
+A aba de **Assets** organiza todos os arquivos que podem ser utilizados nas edições e entregas: logomarcas, trilhas, transições, arquivos brutos, presets e mais.
+
+Essa aba é usada tanto pela equipe de edição quanto pela coordenação do evento para upload e busca de materiais.
+
+---
+
+## Estrutura
+
+### 📁 Categorias
+- Logomarcas e identidade visual
+- Trilhas sonoras e efeitos
+- Transições e efeitos visuais
+- Material bruto (vídeos, fotos)
+- Vídeos de referência
+- Templates
+
+### 🔍 Busca e Organização
+- Sistema de tags e metadados por arquivo
+- Filtros por categoria, data, nome
+- Miniaturas automáticas para vídeos/imagens
+
+### 🔄 Versões
+- Controle de versões com histórico por asset
+- Campo de comentários sobre mudanças
+
+### ⬇️ Download direto para software de edição
+
+---
+
+## Integrações
+
+- Usado pela aba **Edições** e **Entregas**
+- Permite download direto e reutilização rápida
+
+---
+
+## Banco de Dados Envolvido
+
+- `assets_library`
+- `asset_tags`
+- `asset_versions`
+
+---
+
+## Permissões
+
+| Papel       | Pode enviar/editar? |
+|-------------|----------------------|
+| Admin       | Sim                  |
+| Coordenador | Sim                  |
+| Editor      | Sim (limitado)       |
+| Cliente     | Não                  |
+""",
+
+    "detalhamento_aba_monitoramento.txt": """
+# GoNetwork AI – Detalhamento da Aba: Monitoramento de Entregas
+
+## Visão Geral
+
+A aba de **Monitoramento** oferece uma visão geral das entregas em andamento, atrasadas, pendentes de aprovação ou finalizadas.
+
+Ela serve como centro de controle para coordenadores e administradores acompanharem o progresso de cada entrega.
+
+---
+
+## Funcionalidades
+
+### 🧭 Painel de Status
+- Exibição em cards ou tabela com colunas:
+  - Título
+  - Editor responsável
+  - Status atual
+  - Prazo
+  - Última modificação
+
+### 📈 Filtros Avançados
+- Filtro por:
+  - Status
+  - Editor
+  - Tipo de entrega
+  - Data
+  - Evento
+
+### ⚠️ Alertas
+- Ícones e notificações visuais para:
+  - Entregas próximas do prazo
+  - Entregas atrasadas
+  - Entregas rejeitadas
+
+### 📊 Métricas
+- Taxa de conclusão
+- Tempo médio por tipo de entrega
+- Gargalos frequentes
+
+---
+
+## Integrações
+
+- Consome dados da aba **Edições**
+- Atualiza automaticamente a cada submissão ou aprovação
+
+---
+
+## Banco de Dados Envolvido
+
+- `editor_deliveries`
+- `delivery_status`
+- `timeline_events`
+
+---
+
+## Permissões
+
+| Papel       | Pode visualizar? |
+|-------------|------------------|
+| Admin       | Sim              |
+| Coordenador | Sim              |
+| Editor      | Sim              |
+| Cliente     | Somente entregas do seu evento |
+""",
+
+    "detalhamento_aba_feedback_final.txt": """
+# GoNetwork AI – Detalhamento da Aba: Encerramento e Avaliação
+
+## Visão Geral
+
+Essa aba é acessada após a conclusão do evento. Permite arquivar o projeto, coletar feedback da equipe e gerar relatórios finais de desempenho e entregas.
+
+---
+
+## Funcionalidades
+
+### 📦 Arquivamento
+- Geração de pacote final com:
+  - Todas as entregas em .zip
+  - Relatório de produção
+  - Feedbacks da equipe
+- Backup automático e seguro dos dados
+
+### 📝 Avaliação
+- Formulários internos para:
+  - Feedback por membro da equipe
+  - Autoavaliação
+  - Observações do coordenador
+
+### 📊 Relatório Final
+- Geração automática com:
+  - Quantidade de entregas
+  - Tempo médio por entrega
+  - Comparação com benchmarks
+  - Notas e sugestões
+
+---
+
+## Integrações
+
+- Consome dados das abas:
+  - Edições
+  - Equipe
+  - Timeline
+
+---
+
+## Banco de Dados Envolvido
+
+- `project_closure`
+- `team_feedback`
+- `final_report_data`
+
+---
+
+## Permissões
+
+| Papel       | Acesso permitido |
+|-------------|------------------|
+| Admin       | Total            |
+| Coordenador | Total            |
+| Editor      | Somente feedback |
+| Cliente     | Visualiza relatório final |
+"""
+}
+
+# Salvar arquivos adicionais
+extra_files = []
+for file_name, content in abas_extras.items():
+    path = ref_dir / file_name
+    path.write_text(content.strip(), encoding="utf-8")
+    extra_files.append(path.name)
+
+extra_files

@@ -1,0 +1,1400 @@
+# Implementação da Aba de Edições (Video Edits) para o Sistema GoNetwork
+
+Vou desenvolver a solução completa para a aba de edições conforme o escopo, adaptando ao seu projeto existente. A implementação consistirá em:
+
+1. **Widget para a interface de edições**
+2. **Tabelas no banco de dados**
+3. **Repositório para gerenciar as operações**
+
+## 1. Esquema do Banco de Dados
+
+Primeiro, criaremos as tabelas necessárias no banco de dados:
+
+```sql name=database/schema/video_edits_tables.sql
+-- Tabela para armazenar as edições de vídeo
+CREATE TABLE IF NOT EXISTS video_edits (
+    id TEXT PRIMARY KEY,
+    event_id TEXT NOT NULL,
+    editor_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    deadline TEXT NOT NULL,
+    style TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'Em edição',
+    video_path TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (event_id) REFERENCES events(id),
+    FOREIGN KEY (editor_id) REFERENCES team_members(id)
+);
+
+-- Tabela para armazenar os comentários nos vídeos
+CREATE TABLE IF NOT EXISTS video_comments (
+    id TEXT PRIMARY KEY,
+    video_edit_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,  -- Em segundos
+    comment TEXT NOT NULL,
+    is_resolved INTEGER NOT NULL DEFAULT 0,  -- 0=pendente, 1=resolvido
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (video_edit_id) REFERENCES video_edits(id),
+    FOREIGN KEY (user_id) REFERENCES team_members(id)
+);
+
+-- Tabela para armazenar as entregas dos editores
+CREATE TABLE IF NOT EXISTS editor_deliveries (
+    id TEXT PRIMARY KEY,
+    video_edit_id TEXT NOT NULL,
+    asset_refs TEXT,  -- Referências ou links para os assets
+    is_submitted INTEGER NOT NULL DEFAULT 0,  -- 0=não, 1=sim
+    submitted_at TEXT,
+    approval_status TEXT NOT NULL DEFAULT 'Pendente',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (video_edit_id) REFERENCES video_edits(id)
+);
+```
+
+## 2. Repositório para as Edições de Vídeo
+
+Agora, vamos criar um repositório para gerenciar as operações com o banco de dados:
+
+```python name=database/VideoRepository.py
+import uuid
+import datetime
+from database.Database import Database
+
+class VideoRepository:
+    """Repositório para operações com edições de vídeo"""
+    
+    def __init__(self):
+        """Inicializa o repositório com uma conexão ao banco de dados"""
+        self.db = Database()
+    
+    # ===== Operações com edições de vídeo =====
+    
+    def create_video_edit(self, video_data):
+        """
+        Cria uma nova edição de vídeo
+        
+        Parâmetros:
+        - video_data: dicionário com os dados da edição
+        
+        Retorna:
+        - ID da edição criada
+        """
+        # Gerar ID único
+        video_id = str(uuid.uuid4())
+        
+        # Timestamp atual
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Executar inserção
+        self.db.execute(
+            '''
+            INSERT INTO video_edits (
+                id, event_id, editor_id, title, deadline, style, status, video_path,
+                created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''',
+            (
+                video_id,
+                video_data.get('event_id', ''),
+                video_data.get('editor_id', ''),
+                video_data.get('title', ''),
+                video_data.get('deadline', ''),
+                video_data.get('style', ''),
+                video_data.get('status', 'Em edição'),
+                video_data.get('video_path', ''),
+                now,
+                now
+            )
+        )
+        
+        # Salvar alterações
+        self.db.commit()
+        
+        return video_id
+    
+    def update_video_edit(self, video_id, video_data):
+        """
+        Atualiza uma edição de vídeo existente
+        
+        Parâmetros:
+        - video_id: ID da edição
+        - video_data: dicionário com os dados atualizados
+        
+        Retorna:
+        - True se atualizado com sucesso, False caso contrário
+        """
+        # Verificar se a edição existe
+        existing_video = self.get_video_edit_by_id(video_id)
+        if not existing_video:
+            return False
+            
+        # Timestamp atual
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Executar atualização
+        self.db.execute(
+            '''
+            UPDATE video_edits SET
+                editor_id = ?,
+                title = ?,
+                deadline = ?,
+                style = ?,
+                status = ?,
+                video_path = ?,
+                updated_at = ?
+            WHERE id = ?
+            ''',
+            (
+                video_data.get('editor_id', existing_video.get('editor_id')),
+                video_data.get('title', existing_video.get('title')),
+                video_data.get('deadline', existing_video.get('deadline')),
+                video_data.get('style', existing_video.get('style')),
+                video_data.get('status', existing_video.get('status')),
+                video_data.get('video_path', existing_video.get('video_path')),
+                now,
+                video_id
+            )
+        )
+        
+        # Salvar alterações
+        self.db.commit()
+        
+        return True
+    
+    def delete_video_edit(self, video_id):
+        """
+        Remove uma edição de vídeo e seus dados relacionados
+        
+        Parâmetros:
+        - video_id: ID da edição a ser removida
+        
+        Retorna:
+        - True se removido com sucesso, False caso contrário
+        """
+        # Verificar se a edição existe
+        existing_video = self.get_video_edit_by_id(video_id)
+        if not existing_video:
+            return False
+            
+        # Remover comentários associados
+        self.db.execute('DELETE FROM video_comments WHERE video_edit_id = ?', (video_id,))
+        
+        # Remover entregas associadas
+        self.db.execute('DELETE FROM editor_deliveries WHERE video_edit_id = ?', (video_id,))
+        
+        # Remover a edição
+        self.db.execute('DELETE FROM video_edits WHERE id = ?', (video_id,))
+        
+        # Salvar alterações
+        self.db.commit()
+        
+        return True
+    
+    def get_video_edit_by_id(self, video_id):
+        """
+        Busca uma edição de vídeo pelo ID
+        
+        Parâmetros:
+        - video_id: ID da edição
+        
+        Retorna:
+        - Dicionário com os dados da edição ou None se não encontrado
+        """
+        result = self.db.fetch_one('SELECT * FROM video_edits WHERE id = ?', (video_id,))
+        
+        if result:
+            return dict(result)
+        
+        return None
+    
+    def get_all_video_edits(self):
+        """
+        Busca todas as edições de vídeo
+        
+        Retorna:
+        - Lista de edições como dicionários
+        """
+        results = self.db.fetch_all('SELECT * FROM video_edits ORDER BY deadline ASC')
+        
+        return [dict(row) for row in results]
+    
+    def get_video_edits_by_event(self, event_id):
+        """
+        Busca edições de vídeo associadas a um evento específico
+        
+        Parâmetros:
+        - event_id: ID do evento
+        
+        Retorna:
+        - Lista de edições como dicionários
+        """
+        results = self.db.fetch_all(
+            'SELECT * FROM video_edits WHERE event_id = ? ORDER BY deadline ASC',
+            (event_id,)
+        )
+        
+        return [dict(row) for row in results]
+    
+    def get_video_edits_by_editor(self, editor_id):
+        """
+        Busca edições de vídeo atribuídas a um editor específico
+        
+        Parâmetros:
+        - editor_id: ID do editor
+        
+        Retorna:
+        - Lista de edições como dicionários
+        """
+        results = self.db.fetch_all(
+            'SELECT * FROM video_edits WHERE editor_id = ? ORDER BY deadline ASC',
+            (editor_id,)
+        )
+        
+        return [dict(row) for row in results]
+    
+    def get_video_edits_by_status(self, status):
+        """
+        Busca edições de vídeo com um status específico
+        
+        Parâmetros:
+        - status: status a ser buscado
+        
+        Retorna:
+        - Lista de edições como dicionários
+        """
+        results = self.db.fetch_all(
+            'SELECT * FROM video_edits WHERE status = ? ORDER BY deadline ASC',
+            (status,)
+        )
+        
+        return [dict(row) for row in results]
+
+    # ===== Operações com comentários em vídeos =====
+    
+    def add_video_comment(self, comment_data):
+        """
+        Adiciona um novo comentário a uma edição de vídeo
+        
+        Parâmetros:
+        - comment_data: dicionário com os dados do comentário
+        
+        Retorna:
+        - ID do comentário criado
+        """
+        # Gerar ID único
+        comment_id = str(uuid.uuid4())
+        
+        # Timestamp atual
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Executar inserção
+        self.db.execute(
+            '''
+            INSERT INTO video_comments (
+                id, video_edit_id, user_id, timestamp, comment, is_resolved, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''',
+            (
+                comment_id,
+                comment_data.get('video_edit_id', ''),
+                comment_data.get('user_id', ''),
+                comment_data.get('timestamp', 0),
+                comment_data.get('comment', ''),
+                0,  # Não resolvido por padrão
+                now
+            )
+        )
+        
+        # Salvar alterações
+        self.db.commit()
+        
+        return comment_id
+    
+    def update_comment_status(self, comment_id, is_resolved):
+        """
+        Atualiza o status de um comentário
+        
+        Parâmetros:
+        - comment_id: ID do comentário
+        - is_resolved: boolean indicando se está resolvido
+        
+        Retorna:
+        - True se atualizado com sucesso, False caso contrário
+        """
+        # Verificar se o comentário existe
+        result = self.db.fetch_one('SELECT * FROM video_comments WHERE id = ?', (comment_id,))
+        if not result:
+            return False
+        
+        # Executar atualização
+        resolved_value = 1 if is_resolved else 0
+        self.db.execute(
+            'UPDATE video_comments SET is_resolved = ? WHERE id = ?',
+            (resolved_value, comment_id)
+        )
+        
+        # Salvar alterações
+        self.db.commit()
+        
+        return True
+    
+    def get_video_comments(self, video_edit_id):
+        """
+        Busca todos os comentários de uma edição de vídeo específica
+        
+        Parâmetros:
+        - video_edit_id: ID da edição de vídeo
+        
+        Retorna:
+        - Lista de comentários como dicionários
+        """
+        results = self.db.fetch_all(
+            '''
+            SELECT c.*, u.name AS user_name
+            FROM video_comments c
+            JOIN team_members u ON c.user_id = u.id
+            WHERE c.video_edit_id = ?
+            ORDER BY c.timestamp ASC
+            ''',
+            (video_edit_id,)
+        )
+        
+        return [dict(row) for row in results]
+    
+    # ===== Operações com entregas de editores =====
+    
+    def create_delivery(self, delivery_data):
+        """
+        Cria uma nova entrega para uma edição de vídeo
+        
+        Parâmetros:
+        - delivery_data: dicionário com os dados da entrega
+        
+        Retorna:
+        - ID da entrega criada
+        """
+        # Gerar ID único
+        delivery_id = str(uuid.uuid4())
+        
+        # Timestamp atual
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Executar inserção
+        self.db.execute(
+            '''
+            INSERT INTO editor_deliveries (
+                id, video_edit_id, asset_refs, is_submitted, submitted_at,
+                approval_status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''',
+            (
+                delivery_id,
+                delivery_data.get('video_edit_id', ''),
+                delivery_data.get('asset_refs', ''),
+                0,  # Não submetido por padrão
+                None,
+                'Pendente',
+                now,
+                now
+            )
+        )
+        
+        # Salvar alterações
+        self.db.commit()
+        
+        return delivery_id
+    
+    def submit_delivery(self, delivery_id, asset_refs):
+        """
+        Marca uma entrega como submetida
+        
+        Parâmetros:
+        - delivery_id: ID da entrega
+        - asset_refs: referências aos assets entregues
+        
+        Retorna:
+        - True se atualizado com sucesso, False caso contrário
+        """
+        # Verificar se a entrega existe
+        result = self.db.fetch_one('SELECT * FROM editor_deliveries WHERE id = ?', (delivery_id,))
+        if not result:
+            return False
+        
+        # Timestamp atual
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Executar atualização
+        self.db.execute(
+            '''
+            UPDATE editor_deliveries SET
+                asset_refs = ?,
+                is_submitted = ?,
+                submitted_at = ?,
+                updated_at = ?
+            WHERE id = ?
+            ''',
+            (asset_refs, 1, now, now, delivery_id)
+        )
+        
+        # Salvar alterações
+        self.db.commit()
+        
+        return True
+    
+    def update_approval_status(self, delivery_id, status):
+        """
+        Atualiza o status de aprovação de uma entrega
+        
+        Parâmetros:
+        - delivery_id: ID da entrega
+        - status: novo status de aprovação
+        
+        Retorna:
+        - True se atualizado com sucesso, False caso contrário
+        """
+        # Verificar se a entrega existe
+        result = self.db.fetch_one('SELECT * FROM editor_deliveries WHERE id = ?', (delivery_id,))
+        if not result:
+            return False
+        
+        # Timestamp atual
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Executar atualização
+        self.db.execute(
+            '''
+            UPDATE editor_deliveries SET
+                approval_status = ?,
+                updated_at = ?
+            WHERE id = ?
+            ''',
+            (status, now, delivery_id)
+        )
+        
+        # Quando aprovado, atualizar também o status da edição de vídeo
+        if status == "Aprovado":
+            self.db.execute(
+                '''
+                UPDATE video_edits SET
+                    status = 'Entregue',
+                    updated_at = ?
+                WHERE id = (
+                    SELECT video_edit_id FROM editor_deliveries WHERE id = ?
+                )
+                ''',
+                (now, delivery_id)
+            )
+        
+        # Salvar alterações
+        self.db.commit()
+        
+        return True
+    
+    def get_deliveries_by_video(self, video_edit_id):
+        """
+        Busca todas as entregas relacionadas a uma edição de vídeo
+        
+        Parâmetros:
+        - video_edit_id: ID da edição de vídeo
+        
+        Retorna:
+        - Lista de entregas como dicionários
+        """
+        results = self.db.fetch_all(
+            'SELECT * FROM editor_deliveries WHERE video_edit_id = ?',
+            (video_edit_id,)
+        )
+        
+        return [dict(row) for row in results]
+```
+
+## 3. Widget de Edição de Vídeo
+
+Agora, vamos criar o widget principal para a interface de edições de vídeo:
+
+```python name=gui/widgets/editing_widget.py
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
+    QFrame, QTableWidget, QTableWidgetItem, QHeaderView, 
+    QComboBox, QLineEdit, QTextEdit, QDateTimeEdit, QSlider,
+    QScrollArea, QMessageBox, QFileDialog, QSplitter
+)
+from PySide6.QtCore import Qt, QSize, QDateTime, Slot, QUrl, QTime, Signal
+from PySide6.QtGui import QIcon, QColor, QPainter, QPen, QBrush
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PySide6.QtMultimediaWidgets import QVideoWidget
+import datetime
+
+import gui.themes.dracula as style
+from database.VideoRepository import VideoRepository
+from database.EventRepository import EventRepository
+from database.TeamRepository import TeamRepository
+
+class VideoCommentWidget(QFrame):
+    """Widget para exibir um comentário de vídeo"""
+    
+    def __init__(self, comment_data, is_editor=False, parent=None):
+        super().__init__(parent)
+        self.comment_data = comment_data
+        
+        # Configurando estilo do frame
+        self.setStyleSheet(f"""
+            QFrame {{
+                background-color: {style.SECONDARYLIGHTER};
+                border-radius: 8px;
+                padding: 10px;
+                margin: 5px 0;
+            }}
+        """)
+        
+        # Layout principal
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(5)
+        
+        # Cabeçalho com autor e timestamp
+        header_layout = QHBoxLayout()
+        
+        # Converter timestamp para formato de tempo (MM:SS)
+        timestamp_secs = comment_data.get('timestamp', 0)
+        mins, secs = divmod(timestamp_secs, 60)
+        timestamp_str = f"{mins:02d}:{secs:02d}"
+        
+        author_label = QLabel(f"<b>{comment_data.get('user_name', 'Usuário')}</b>")
+        time_label = QLabel(f"<i>@{timestamp_str}</i>")
+        time_label.setStyleSheet(f"color: {style.PRIMARY};")
+        
+        header_layout.addWidget(author_label)
+        header_layout.addStretch()
+        header_layout.addWidget(time_label)
+        
+        # Conteúdo do comentário
+        comment_text = QLabel(comment_data.get('comment', ''))
+        comment_text.setWordWrap(True)
+        comment_text.setStyleSheet("font-size: 12px;")
+        
+        # Botões de ação (apenas para editores)
+        action_layout = QHBoxLayout()
+        action_layout.setContentsMargins(0, 5, 0, 0)
+        
+        self.status_label = QLabel()
+        if comment_data.get('is_resolved'):
+            self.status_label.setText("✓ Resolvido")
+            self.status_label.setStyleSheet(f"color: {style.SUCCESS};")
+        else:
+            self.status_label.setText("⧖ Pendente")
+            self.status_label.setStyleSheet(f"color: {style.WARNING};")
+        
+        action_layout.addWidget(self.status_label)
+        action_layout.addStretch()
+        
+        # Botão para marcar como resolvido (apenas para editores)
+        if is_editor and not comment_data.get('is_resolved'):
+            resolve_btn = QPushButton("Marcar como resolvido")
+            resolve_btn.setStyleSheet(style.btn_primary)
+            resolve_btn.setCursor(Qt.PointingHandCursor)
+            resolve_btn.clicked.connect(self.mark_as_resolved)
+            action_layout.addWidget(resolve_btn)
+        
+        # Adicionar tudo ao layout principal
+        main_layout.addLayout(header_layout)
+        main_layout.addWidget(comment_text)
+        main_layout.addLayout(action_layout)
+    
+    def mark_as_resolved(self):
+        """Marca o comentário como resolvido"""
+        comment_id = self.comment_data.get('id')
+        if comment_id:
+            repo = VideoRepository()
+            if repo.update_comment_status(comment_id, True):
+                self.status_label.setText("✓ Resolvido")
+                self.status_label.setStyleSheet(f"color: {style.SUCCESS};")
+                # Esconder botão
+                for i in range(self.layout().count()):
+                    item = self.layout().itemAt(i)
+                    if item and item.widget() and isinstance(item.widget(), QPushButton):
+                        item.widget().hide()
+
+
+class VideoPlayerWidget(QWidget):
+    """Widget para reprodução de vídeos com marcação de tempo"""
+    
+    commentRequested = Signal(int)  # Sinal emitido quando um comentário é solicitado em um timestamp específico
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.video_path = None
+        
+        layout = QVBoxLayout(self)
+        
+        # Widget de vídeo
+        self.video_widget = QVideoWidget()
+        
+        # Configurações do player
+        self.audio_output = QAudioOutput()
+        self.media_player = QMediaPlayer()
+        self.media_player.setAudioOutput(self.audio_output)
+        self.media_player.setVideoOutput(self.video_widget)
+        
+        # Configurações do slider
+        self.position_slider = QSlider(Qt.Horizontal)
+        self.position_slider.setRange(0, 0)
+        self.position_slider.sliderMoved.connect(self.set_position)
+        
+        # Etiquetas de tempo
+        time_layout = QHBoxLayout()
+        self.current_time_label = QLabel("00:00")
+        self.duration_label = QLabel("00:00")
+        time_layout.addWidget(self.current_time_label)
+        time_layout.addStretch()
+        time_layout.addWidget(self.duration_label)
+        
+        # Botões de controle
+        control_layout = QHBoxLayout()
+        
+        self.play_btn = QPushButton("▶")
+        self.play_btn.clicked.connect(self.play_pause)
+        self.play_btn.setStyleSheet(style.btn_secondary)
+        self.play_btn.setCursor(Qt.PointingHandCursor)
+        
+        self.stop_btn = QPushButton("■")
+        self.stop_btn.clicked.connect(self.stop)
+        self.stop_btn.setStyleSheet(style.btn_secondary)
+        self.stop_btn.setCursor(Qt.PointingHandCursor)
+        
+        self.comment_btn = QPushButton("Adicionar Comentário")
+        self.comment_btn.clicked.connect(self.add_comment)
+        self.comment_btn.setStyleSheet(style.btn_primary)
+        self.comment_btn.setCursor(Qt.PointingHandCursor)
+        
+        self.load_btn = QPushButton("Carregar Vídeo")
+        self.load_btn.clicked.connect(self.load_video)
+        self.load_btn.setStyleSheet(style.btn_secondary)
+        self.load_btn.setCursor(Qt.PointingHandCursor)
+        
+        control_layout.addWidget(self.play_btn)
+        control_layout.addWidget(self.stop_btn)
+        control_layout.addStretch()
+        control_layout.addWidget(self.comment_btn)
+        control_layout.addWidget(self.load_btn)
+        
+        # Adicionar widgets ao layout principal
+        layout.addWidget(self.video_widget)
+        layout.addWidget(self.position_slider)
+        layout.addLayout(time_layout)
+        layout.addLayout(control_layout)
+        
+        # Conectar sinais
+        self.media_player.positionChanged.connect(self.position_changed)
+        self.media_player.durationChanged.connect(self.duration_changed)
+        
+    def load_video(self, file_path=None):
+        """Carrega um vídeo para reprodução"""
+        if not file_path:
+            file_path, _ = QFileDialog.getOpenFileName(
+                self, "Selecionar Vídeo", "", "Arquivos de Vídeo (*.mp4 *.avi *.mkv)"
+            )
+            
+        if file_path:
+            self.video_path = file_path
+            self.media_player.setSource(QUrl.fromLocalFile(file_path))
+            self.play()
+    
+    def play(self):
+        """Inicia a reprodução do vídeo"""
+        self.media_player.play()
+        self.play_btn.setText("❚❚")
+    
+    def pause(self):
+        """Pausa a reprodução do vídeo"""
+        self.media_player.pause()
+        self.play_btn.setText("▶")
+    
+    def play_pause(self):
+        """Alterna entre reprodução e pausa"""
+        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.pause()
+        else:
+            self.play()
+    
+    def stop(self):
+        """Para a reprodução do vídeo"""
+        self.media_player.stop()
+        self.play_btn.setText("▶")
+    
+    def set_position(self, position):
+        """Define a posição de reprodução"""
+        self.media_player.setPosition(position)
+    
+    def position_changed(self, position):
+        """Atualiza a interface quando a posição de reprodução muda"""
+        self.position_slider.setValue(position)
+        
+        # Atualizar etiqueta de tempo atual
+        seconds = position / 1000
+        minutes = seconds // 60
+        seconds = seconds % 60
+        self.current_time_label.setText(f"{int(minutes):02d}:{int(seconds):02d}")
+    
+    def duration_changed(self, duration):
+        """Atualiza a interface quando a duração do vídeo é conhecida"""
+        self.position_slider.setRange(0, duration)
+        
+        # Atualizar etiqueta de duração
+        seconds = duration / 1000
+        minutes = seconds // 60
+        seconds = seconds % 60
+        self.duration_label.setText(f"{int(minutes):02d}:{int(seconds):02d}")
+    
+    def add_comment(self):
+        """Emite sinal para adicionar comentário na posição atual"""
+        position = self.media_player.position() / 1000  # Converter para segundos
+        self.commentRequested.emit(int(position))
+
+
+class EditingWidget(QWidget):
+    """Widget principal da aba de edições de vídeo"""
+    
+    def __init__(self):
+        super().__init__()
+        
+        # Repositórios
+        self.video_repository = VideoRepository()
+        self.event_repository = EventRepository()
+        self.team_repository = TeamRepository()
+        
+        # Dados da sessão atual
+        self.current_video_id = None
+        self.current_event = None
+        self.is_editor = True  # Para fins de demonstração, considere o usuário como editor
+        
+        # Configurar UI
+        self.setup_ui()
+        
+        # Carregar dados iniciais
+        self.load_initial_data()
+    
+    def setup_ui(self):
+        """Configura a interface do usuário"""
+        # Layout principal
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Cabeçalho
+        self.header_widget = QWidget()
+        self.header_widget.setStyleSheet(f"background-color: {style.SECONDARYLIGHTER};")
+        header_layout = QHBoxLayout(self.header_widget)
+        
+        self.event_selector = QComboBox()
+        self.event_selector.setMinimumWidth(250)
+        self.event_selector.currentIndexChanged.connect(self.on_event_changed)
+        
+        self.editor_selector = QComboBox()
+        self.editor_selector.setMinimumWidth(200)
+        self.editor_selector.currentIndexChanged.connect(self.on_editor_changed)
+        
+        self.client_label = QLabel("Cliente: ---")
+        
+        header_layout.addWidget(QLabel("Evento:"))
+        header_layout.addWidget(self.event_selector)
+        header_layout.addWidget(QLabel("Editor:"))
+        header_layout.addWidget(self.editor_selector)
+        header_layout.addStretch()
+        header_layout.addWidget(self.client_label)
+        
+        # Título da edição
+        info_widget = QFrame()
+        info_widget.setFrameShape(QFrame.StyledPanel)
+        info_widget.setStyleSheet(f"background-color: {style.PRIMARYLIGHTER}; border-radius: 8px;")
+        info_layout = QVBoxLayout(info_widget)
+        
+        # Título da edição
+        self.title_label = QLabel("TÍTULO: ---")
+        self.title_label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        self.title_label.setAlignment(Qt.AlignCenter)
+        
+        # Detalhes da edição
+        details_layout = QHBoxLayout()
+        self.style_label = QLabel("Estilo: ---")
+        self.deadline_label = QLabel("Deadline: ---")
+        self.status_label = QLabel("Status: ---")
+        
+        details_layout.addWidget(self.style_label)
+        details_layout.addStretch()
+        details_layout.addWidget(self.deadline_label)
+        details_layout.addStretch()
+        details_layout.addWidget(self.status_label)
+        
+        info_layout.addWidget(self.title_label)
+        info_layout.addLayout(details_layout)
+        
+        # Área de conteúdo principal (player de vídeo e comentários)
+        self.content_splitter = QSplitter(Qt.Horizontal)
+        
+        # Área esquerda - Player de vídeo
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(10, 10, 10, 10)
+        
+        self.video_player = VideoPlayerWidget()
+        self.video_player.commentRequested.connect(self.show_comment_dialog)
+        
+        left_layout.addWidget(self.video_player)
+        
+        # Área direita - Comentários e Entregas
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Tab para comentários e entregas
+        self.tabs_widget = QWidget()
+        tabs_layout = QVBoxLayout(self.tabs_widget)
+        tabs_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Botões de tab
+        tab_buttons_layout = QHBoxLayout()
+        
+        self.comments_btn = QPushButton("Comentários")
+        self.comments_btn.setCheckable(True)
+        self.comments_btn.setChecked(True)
+        self.comments_btn.clicked.connect(lambda: self.switch_tab(0))
+        self.comments_btn.setStyleSheet(style.tab_selected)
+        
+        self.deliveries_btn = QPushButton("Entregas")
+        self.deliveries_btn.setCheckable(True)
+        self.deliveries_btn.clicked.connect(lambda: self.switch_tab(1))
+        self.deliveries_btn.setStyleSheet(style.tab_normal)
+        
+        tab_buttons_layout.addWidget(self.comments_btn)
+        tab_buttons_layout.addWidget(self.deliveries_btn)
+        tab_buttons_layout.addStretch()
+        
+        # Área de conteúdo da tab
+        self.tab_content = QFrame()
+        self.tab_content.setFrameShape(QFrame.NoFrame)
+        self.tab_content.setStyleSheet(f"background-color: {style.SECONDARYLIGHTER};")
+        
+        # Tab 1: Comentários
+        self.comments_widget = QWidget()
+        comments_layout = QVBoxLayout(self.comments_widget)
+        
+        self.comments_scroll = QScrollArea()
+        self.comments_scroll.setWidgetResizable(True)
+        self.comments_scroll.setStyleSheet("border: none;")
+        
+        self.comments_container = QWidget()
+        self.comments_container_layout = QVBoxLayout(self.comments_container)
+        self.comments_container_layout.setAlignment(Qt.AlignTop)
+        self.comments_container_layout.setSpacing(10)
+        
+        self.comments_scroll.setWidget(self.comments_container)
+        
+        self.add_comment_btn = QPushButton("Adicionar Comentário")
+        self.add_comment_btn.clicked.connect(lambda: self.show_comment_dialog())
+        self.add_comment_btn.setStyleSheet(style.btn_primary)
+        self.add_comment_btn.setCursor(Qt.PointingHandCursor)
+        
+        comments_layout.addWidget(self.comments_scroll)
+        comments_layout.addWidget(self.add_comment_btn)
+        
+        # Tab 2: Entregas
+        self.deliveries_widget = QWidget()
+        deliveries_layout = QVBoxLayout(self.deliveries_widget)
+        
+        self.deliveries_table = QTableWidget()
+        self.deliveries_table.setColumnCount(4)
+        self.deliveries_table.setHorizontalHeaderLabels(["Título", "Status", "Deadline", "Ações"])
+        self.deliveries_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.deliveries_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.deliveries_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.deliveries_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        
+        self.add_delivery_btn = QPushButton("Nova Entrega")
+        self.add_delivery_btn.clicked.connect(self.add_new_delivery)
+        self.add_delivery_btn.setStyleSheet(style.btn_primary)
+        self.add_delivery_btn.setCursor(Qt.PointingHandCursor)
+        
+        deliveries_layout.addWidget(self.deliveries_table)
+        deliveries_layout.addWidget(self.add_delivery_btn)
+        
+        # Configurar o layout das tabs
+        self.tab_content_layout = QVBoxLayout(self.tab_content)
+        self.tab_content_layout.setContentsMargins(0, 0, 0, 0)
+        self.tab_content_layout.addWidget(self.comments_widget)
+        self.tab_content_layout.addWidget(self.deliveries_widget)
+        self.deliveries_widget.hide()  # Inicialmente mostrar apenas comentários
+        
+        tabs_layout.addLayout(tab_buttons_layout)
+        tabs_layout.addWidget(self.tab_content)
+        
+        right_layout.addWidget(self.tabs_widget)
+        
+        # Adicionar os widgets ao splitter
+        self.content_splitter.addWidget(left_widget)
+        self.content_splitter.addWidget(right_widget)
+        self.content_splitter.setStretchFactor(0, 2)  # Proporção 2:1
+        self.content_splitter.setStretchFactor(1, 1)
+        
+        # Adicionar tudo ao layout principal
+        main_layout.addWidget(self.header_widget)
+        main_layout.addWidget(info_widget)
+        main_layout.addWidget(self.content_splitter, 1)  # 1 = stretch factor
+    
+    def load_initial_data(self):
+        """Carrega os dados iniciais para a interface"""
+        # Carregar eventos
+        events = self.event_repository.get_all()
+        self.event_selector.clear()
+        if events:
+            for event in events:
+                self.event_selector.addItem(event['name'], event['id'])
+    
+    def on_event_changed(self, index):
+        """Manipulador para quando o evento selecionado muda"""
+        if index < 0:
+            return
+        
+        event_id = self.event_selector.currentData()
+        self.current_event = self.event_repository.get_by_id(event_id)
+        
+        if self.current_event:
+            # Buscar cliente do evento
+            client_name = "---"
+            if self.current_event.get('client_id'):
+                client = self.team_repository.get_client_by_id(self.current_event['client_id'])
+                if client:
+                    client_name = client['company']
+            
+            self.client_label.setText(f"Cliente: {client_name}")
+            
+            # Carregar editores associados ao evento
+            team_members = self.team_repository.get_event_team(event_id)
+            self.editor_selector.clear()
+            
+            if team_members:
+                for member in team_members:
+                    if "edito" in member['role'].lower():  # editor, editora, edição etc.
+                        self.editor_selector.addItem(member['name'], member['id'])
+            
+            # Carregar edições associadas ao evento
+            self.load_video_edits(event_id)
+    
+    def on_editor_changed(self, index):
+        """Manipulador para quando o editor selecionado muda"""
+        if index < 0 or not self.current_event:
+            return
+        
+        event_id = self.current_event['id']
+        editor_id = self.editor_selector.currentData()
+        
+        if editor_id:
+            # Filtrar edições por editor
+            video_edits = self.video_repository.get_video_edits_by_event(event_id)
+            filtered_edits = [edit for edit in video_edits if edit['editor_id'] == editor_id]
+            
+            # Se houver edições deste editor, carregar a primeira
+            if filtered_edits:
+                self.load_video_edit(filtered_edits[0]['id'])
+    
+    def load_video_edits(self, event_id):
+        """Carrega as edições de vídeo associadas a um evento"""
+        video_edits = self.video_repository.get_video_edits_by_event(event_id)
+        
+        if not video_edits:
+            # Criar uma edição de exemplo para demonstração
+            example_title = "AFTERMOVIE"
+            example_editor_id = self.editor_selector.currentData() if self.editor_selector.count() > 0 else None
+            
+            if example_editor_id:
+                tomorrow = datetime.datetime.now() + datetime.timedelta(days=1)
+                deadline = tomorrow.strftime("%Y-%m-%d %H:%M:%S")
+                
+                example_data = {
+                    'event_id': event_id,
+                    'editor_id': example_editor_id,
+                    'title': example_title,
+                    'deadline': deadline,
+                    'style': 'Dinâmico',
+                    'status': 'Em edição',
+                    'video_path': ''
+                }
+                
+                new_edit_id = self.video_repository.create_video_edit(example_data)
+                if new_edit_id:
+                    self.load_video_edit(new_edit_id)
+        elif self.editor_selector.count() > 0:
+            # Filtrar por editor selecionado
+            editor_id = self.editor_selector.currentData()
+            filtered_edits = [edit for edit in video_edits if edit['editor_id'] == editor_id]
+            
+            if filtered_edits:
+                self.load_video_edit(filtered_edits[0]['id'])
+            else:
+                self.load_video_edit(video_edits[0]['id'])
+    
+    def load_video_edit(self, video_id):
+        """Carrega uma edição de vídeo específica"""
+        video_edit = self.video_repository.get_video_edit_by_id(video_id)
+        
+        if not video_edit:
+            return
+        
+        self.current_video_id = video_id
+        
+        # Atualizar informações na interface
+        self.title_label.setText(f"TÍTULO: {video_edit['title']}")
+        self.style_label.setText(f"Estilo: {video_edit['style']}")
+        
+        # Formatar deadline
+        deadline = datetime.datetime.strptime(video_edit['deadline'], "%Y-%m-%d %H:%M:%S")
+        deadline_str = deadline.strftime("%d/%m/%Y - %Hh%M")
+        self.deadline_label.setText(f"Deadline: {deadline_str}")
+        
+        self.status_label.setText(f"Status: {video_edit['status']}")
+        
+        # Carregar o vídeo se houver um caminho definido
+        if video_edit['video_path']:
+            self.video_player.load_video(video_edit['video_path'])
+        
+        # Carregar comentários
+        self.load_comments(video_id)
+        
+        # Carregar entregas
+        self.load_deliveries(video_id)
+    
+    def load_comments(self, video_id):
+        """Carrega os comentários de uma edição de vídeo"""
+        # Limpar comentários anteriores
+        while self.comments_container_layout.count():
+            item = self.comments_container_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        # Buscar comentários
+        comments = self.video_repository.get_video_comments(video_id)
+        
+        if comments:
+            # Adicionar cada comentário ao container
+            for comment in comments:
+                comment_widget = VideoCommentWidget(comment, self.is_editor)
+                self.comments_container_layout.addWidget(comment_widget)
+        else:
+            # Mensagem de nenhum comentário
+            no_comments_label = QLabel("Não há comentários para esta edição.")
+            no_comments_label.setAlignment(Qt.AlignCenter)
+            no_comments_label.setStyleSheet("color: gray; margin: 20px;")
+            self.comments_container_layout.addWidget(no_comments_label)
+    
+    def load_deliveries(self, video_id):
+        """Carrega as entregas associadas a uma edição de vídeo"""
+        # Limpar tabela
+        self.deliveries_table.setRowCount(0)
+        
+        # Buscar entregas
+        deliveries = self.video_repository.get_deliveries_by_video(video_id)
+        
+        if not deliveries:
+            # Criar entrega inicial se não houver
+            self.create_default_delivery(video_id)
+            deliveries = self.video_repository.get_deliveries_by_video(video_id)
+        
+        # Preencher tabela
+        for row, delivery in enumerate(deliveries):
+            self.deliveries_table.insertRow(row)
+            
+            # Dados da edição associada à entrega
+            video_edit = self.video_repository.get_video_edit_by_id(delivery['video_edit_id'])
+            
+            # Título
+            title_item = QTableWidgetItem(video_edit['title'] if video_edit else "N/A")
+            self.deliveries_table.setItem(row, 0, title_item)
+            
+            # Status
+            status_text = "Não submetido"
+            if delivery['is_submitted']:
+                status_text = delivery['approval_status']
+            status_item = QTableWidgetItem(status_text)
+            self.deliveries_table.setItem(row, 1, status_item)
+            
+            # Deadline
+            deadline = "N/A"
+            if video_edit and video_edit.get('deadline'):
+                deadline_date = datetime.datetime.strptime(video_edit['deadline'], "%Y-%m-%d %H:%M:%S")
+                deadline = deadline_date.strftime("%d/%m/%Y - %Hh%M")
+            deadline_item = QTableWidgetItem(deadline)
+            self.deliveries_table.setItem(row, 2, deadline_item)
+            
+            # Botões de ação
+            actions_widget = QWidget()
+            actions_layout = QHBoxLayout(actions_widget)
+            actions_layout.setContentsMargins(0, 0, 0, 0)
+            
+            if not delivery['is_submitted']:
+                # Botão de submeter entrega
+                submit_btn = QPushButton("Submeter")
+                submit_btn.setStyleSheet(style.btn_primary)
+                submit_btn.setCursor(Qt.PointingHandCursor)
+                submit_btn.clicked.connect(lambda checked, d_id=delivery['id']: self.submit_delivery(d_id))
+                actions_layout.addWidget(submit_btn)
+            elif delivery['approval_status'] == 'Pendente' and not self.is_editor:
+                # Botões de aprovar/rejeitar (para cliente/admin)
+                approve_btn = QPushButton("Aprovar")
+                approve_btn.setStyleSheet(style.btn_success)
+                approve_btn.setCursor(Qt.PointingHandCursor)
+                approve_btn.clicked.connect(lambda checked, d_id=delivery['id']: self.approve_delivery(d_id))
+                
+                reject_btn = QPushButton("Rejeitar")
+                reject_btn.setStyleSheet(style.btn_danger)
+                reject_btn.setCursor(Qt.PointingHandCursor)
+                reject_btn.clicked.connect(lambda checked, d_id=delivery['id']: self.reject_delivery(d_id))
+                
+                actions_layout.addWidget(approve_btn)
+                actions_layout.addWidget(reject_btn)
+            else:
+                # Status final
+                status_label = QLabel(delivery['approval_status'])
+                if delivery['approval_status'] == 'Aprovado':
+                    status_label.setStyleSheet(f"color: {style.SUCCESS};")
+                elif delivery['approval_status'] == 'Rejeitado':
+                    status_label.setStyleSheet(f"color: {style.DANGER};")
+                actions_layout.addWidget(status_label)
+            
+            actions_layout.addStretch()
+            self.deliveries_table.setCellWidget(row, 3, actions_widget)
+    
+    def create_default_delivery(self, video_id):
+        """Cria uma entrega padrão para uma edição de vídeo"""
+        delivery_data = {
+            'video_edit_id': video_id,
+            'asset_refs': '',
+        }
+        self.video_repository.create_delivery(delivery_data)
+    
+    def switch_tab(self, tab_index):
+        """Alterna entre as abas de comentários e entregas"""
+        if tab_index == 0:
+            # Tab de comentários
+            self.comments_widget.show()
+            self.deliveries_widget.hide()
+            self.comments_btn.setStyleSheet(style.tab_selected)
+            self.deliveries_btn.setStyleSheet(style.tab_normal)
+        else:
+            # Tab de entregas
+            self.comments_widget.hide()
+            self.deliveries_widget.show()
+            self.comments_btn.setStyleSheet(style.tab_normal)
+            self.deliveries_btn.setStyleSheet(style.tab_selected)
+    
+    def show_comment_dialog(self, timestamp=None):
+        """Mostra o diálogo para adicionar um comentário"""
+        if not self.current_video_id:
+            QMessageBox.warning(self, "Aviso", "Selecione uma edição de vídeo primeiro.")
+            return
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Adicionar Comentário")
+        dialog.setMinimumWidth(400)
+        dialog_layout = QVBoxLayout(dialog)
+        
+        # Timestamp
+        timestamp_layout = QHBoxLayout()
+        timestamp_layout.addWidget(QLabel("Tempo (MM:SS):"))
+        
+        time_edit = QLineEdit()
+        if timestamp is not None:
+            mins, secs = divmod(timestamp, 60)
+            time_edit.setText(f"{mins:02d}:{secs:02d}")
+        else:
+            # Pegar posição atual do vídeo
+            position = int(self.video_player.media_player.position() / 1000)  # Em segundos
+            mins, secs = divmod(position, 60)
+            time_edit.setText(f"{mins:02d}:{secs:02d}")
+        
+        timestamp_layout.addWidget(time_edit)
+        
+        # Comentário
+        comment_label = QLabel("Comentário:")
+        comment_text = QTextEdit()
+        comment_text.setMinimumHeight(100)
+        
+        # Botões
+        buttons_layout = QHBoxLayout()
+        cancel_btn = QPushButton("Cancelar")
+        cancel_btn.clicked.connect(dialog.reject)
+        cancel_btn.setStyleSheet(style.btn_secondary)
+        
+        save_btn = QPushButton("Salvar")
+        save_btn.clicked.connect(dialog.accept)
+        save_btn.setStyleSheet(style.btn_primary)
+        
+        buttons_layout.addWidget(cancel_btn)
+        buttons_layout.addWidget(save_btn)
+        
+        # Adicionar tudo ao diálogo
+        dialog_layout.addLayout(timestamp_layout)
+        dialog_layout.addWidget(comment_label)
+        dialog_layout.addWidget(comment_text)
+        dialog_layout.addLayout(buttons_layout)
+        
+        # Mostrar diálogo
+        if dialog.exec() == QDialog.Accepted:
+            # Processar o timestamp
+            try:
+                time_parts = time_edit.text().split(":")
+                if len(time_parts) == 2:
+                    mins = int(time_parts[0])
+                    secs = int(time_parts[1])
+                    timestamp = mins * 60 + secs
+                else:
+                    timestamp = 0
+            except ValueError:
+                timestamp = 0
+            
+            # Salvar comentário
+            comment_data = {
+                'video_edit_id': self.current_video_id,
+                'user_id': '1',  # ID do usuário atual (para demo)
+                'timestamp': timestamp,
+                'comment': comment_text.toPlainText()
+            }
+            
+            comment_id = self.video_repository.add_video_comment(comment_data)
+            if comment_id:
+                # Recarregar comentários
+                self.load_comments(self.current_video_id)
+            else:
+                QMessageBox.warning(self, "Erro", "Não foi possível salvar o comentário.")
+    
+    def add_new_delivery(self):
+        """Adiciona uma nova entrega para a edição atual"""
+        if not self.current_video_id:
+            QMessageBox.warning(self, "Aviso", "Selecione uma edição de vídeo primeiro.")
+            return
+        
+        # Criar nova entrega
+        delivery_data = {
+            'video_edit_id': self.current_video_id,
+            'asset_refs': ''
+        }
+        
+        delivery_id = self.video_repository.create_delivery(delivery_data)
+        if delivery_id:
+            # Recarregar entregas
+            self.load_deliveries(self.current_video_id)
+        else:
+            QMessageBox.warning(self, "Erro", "Não foi possível criar a entrega.")
+    
+    def submit_delivery(self, delivery_id):
+        """Submete uma entrega"""
+        # Diálogo para upload ou referência de arquivo
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Submeter Entrega")
+        dialog.setMinimumWidth(400)
+        dialog_layout = QVBoxLayout(dialog)
+        
+        # Referência do arquivo
+        dialog_layout.addWidget(QLabel("Referência do arquivo ou link:"))
+        ref_input = QLineEdit()
+        
+        browse_btn = QPushButton("Selecionar arquivo")
+        browse_btn.clicked.connect(lambda: self.browse_file(ref_input))
+        browse_btn.setStyleSheet(style.btn_secondary)
+        
+        ref_layout = QHBoxLayout()
+        ref_layout.addWidget(ref_input)
+        ref_layout.addWidget(browse_btn)
+        
+        # Botões
+        buttons_layout = QHBoxLayout()
+        cancel_btn = QPushButton("Cancelar")
+        cancel_btn.clicked.connect(dialog.reject)
+        cancel_btn.setStyleSheet(style.btn_secondary)
+        
+        save_btn = QPushButton("Submeter")
+        save_btn.clicked.connect(dialog.accept)
+        save_btn.setStyleSheet(style.btn_primary)
+        
+        buttons_layout.addWidget(cancel_btn)
+        buttons_layout.addWidget(save_btn)
+        
+        # Adicionar tudo ao diálogo
+        dialog_layout.addLayout(ref_layout)
+        dialog_layout.addLayout(buttons_layout)
+        
+        # Mostrar diálogo
+        if dialog.exec() == QDialog.Accepted:
+            asset_refs = ref_input.text()
+            
+            if self.video_repository.submit_delivery(delivery_id, asset_refs):
+                self.load_deliveries(self.current_video_id)
+            else:
+                QMessageBox.warning(self, "Erro", "Não foi possível submeter a entrega.")
+    
+    def browse_file(self, input_field):
+        """Abre diálogo para selecionar um arquivo e preenche o campo"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Selecionar Arquivo", "", "Todos os arquivos (*.*)"
+        )
+        
+        if file_path:
+            input_field.setText(file_path)
+    
+    def approve_delivery(self, delivery_id):
+        """Aprova uma entrega"""
+        if self.video_repository.update_approval_status(delivery_id, "Aprovado"):
+            # Também atualizar o status da edição
+            self.load_deliveries(self.current_video_id)
+            self.load_video_edit(self.current_video_id)  # Recarregar para atualizar status
+        else:
+            QMessageBox.warning(self, "Erro", "Não foi possível aprovar a entrega.")
+    
+    def reject_delivery(self, delivery_id):
+        """Rejeita uma entrega"""
+        reason, ok = QInputDialog.getText(
+            self, "Motivo da Rejeição", "Informe o motivo da rejeição:"
+        )
+        
+        if ok:
+            if self.video_repository.update_approval_status(delivery_id, "Rejeitado"):
+                self.load_deliveries(self.current_video_id)
+            else:
+                QMessageBox.warning(self, "Erro", "Não foi possível rejeitar a entrega.")
+```
+
+## 4. Modificação no MainWindow para adicionar a nova aba
+
+Verifique se o arquivo `gui/main_window.py` tem um trecho para adicionar os widgets ao content_area. Você precisa adicionar o novo widget à lista:
+
+```python name=gui/main_window.py-add-editing-tab
+# Em gui/main_window.py, no método show_main_interface() ou similar, adicione:
+
+from gui.widgets.editing_widget import EditingWidget
+
+# Na seção onde adiciona os widgets:
+self.content_area.addWidget(EditingWidget())  # Adicionar na posição apropriada
+```
+
+## 5. Executando o Sistema
+
+Para implementar esta funcionalidade, você precisará:
+
+1. **Criar os arquivos de banco de dados**:
+   - Execute o script SQL para criar as tabelas de edições de vídeo
+   - Certifique-se de que essas tabelas estejam integradas ao banco de dados existente
+
+2. **Adicionar os novos arquivos**:
+   - `database/VideoRepository.py`: gerencia operações com edições de vídeo
+   - `gui/widgets/editing_widget.py`: implementa a interface da aba de edições
+
+3. **Adicionar instalações das bibliotecas necessárias**:
+   ```
+   pip install PySide6-QtMultimedia PySide6-QtMultimediaWidgets
+   ```
+
+4. **Adicionar a nova aba ao MainWindow**:
+   - Modificar `gui/main_window.py` para importar e adicionar o novo widget
+
+Essa implementação fornece uma interface completa para gerenciamento de edições de vídeo, com reprodução de vídeo, comentários com marcações de tempo, e sistema de entregas, tudo isso integrado com o fluxo de evento → briefing → edições que você especificou.

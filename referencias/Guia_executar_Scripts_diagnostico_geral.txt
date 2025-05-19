@@ -1,0 +1,97 @@
+# Guia de Execução dos Scripts de Diagnóstico - GoNetwork
+
+## Visão Geral dos Scripts
+
+Forneci 3 scripts diferentes para diagnosticar o projeto:
+
+1. **diagnose_project.sh** - Script Bash para diagnóstico básico (melhor para Linux/Mac)
+2. **diagnostico_completo.py** - Script Python para análise detalhada do sistema
+3. **testes_interativos.py** - Script Python para testes de interface com interação do usuário
+4. **verificar_dependencias.py** - Script Python para verificar dependências e importações
+
+## Instruções para Windows
+
+Como você está usando o Windows (via PowerShell), recomendo usar principalmente os scripts Python:
+
+### 1. Script Principal: diagnostico_completo.py
+
+Este é o script mais importante e completo para verificar seu projeto.
+
+**Como usar:**
+1. Crie um novo arquivo chamado `diagnostico_completo.py`
+2. Copie o código que forneci para este arquivo
+3. Execute com:
+   ```powershell
+   python diagnostico_completo.py
+   ```
+
+### 2. Script de Testes Interativos: testes_interativos.py
+
+Use este para testar a interface e interações do usuário:
+
+**Como usar:**
+1. Crie um arquivo chamado `testes_interativos.py`
+2. Copie o código correspondente para este arquivo
+3. Execute com:
+   ```powershell
+   python testes_interativos.py
+   ```
+
+### 3. Script de Dependências: verificar_dependencias.py
+
+Este script verifica as importações e dependências do projeto:
+
+**Como usar:**
+1. Crie um arquivo chamado `verificar_dependencias.py`
+2. Copie o código correspondente para este arquivo
+3. Execute com:
+   ```powershell
+   python verificar_dependencias.py
+   ```
+
+### 4. Script Bash (diagnose_project.sh)
+
+Este é um script shell para sistemas Unix (Linux/Mac). No Windows, você pode:
+
+**Opção 1 - Ignorar este script** e usar apenas os scripts Python acima.
+
+**Opção 2 - Usar com Git Bash:**
+1. Se você tem Git instalado, tem o Git Bash
+2. Crie um arquivo chamado `diagnose_project.sh`
+3. Copie o código para este arquivo
+4. Execute no Git Bash com:
+   ```bash
+   bash diagnose_project.sh
+   ```
+
+**Opção 3 - Usar com WSL (Windows Subsystem for Linux):**
+1. Se você tem WSL instalado, abra um terminal WSL
+2. Crie e execute o script como em um ambiente Linux
+
+## Ordem Recomendada de Execução
+
+Para diagnóstico completo do projeto, recomendo esta sequência:
+
+1. **diagnostico_completo.py** - Fornece uma visão geral do estado do projeto
+2. **verificar_dependencias.py** - Identifica dependências e possíveis problemas de importação
+3. **testes_interativos.py** - Valida elementos de interface e fluxos de usuário
+
+## Dicas para PowerShell no Windows
+
+Se estiver usando PowerShell, você pode criar os arquivos com o comando:
+
+```powershell
+# Para criar um arquivo Python
+Set-Content -Path diagnostico_completo.py -Value "conteúdo do script aqui"
+
+# Ou use o bloco de notas:
+notepad diagnostico_completo.py
+```
+
+E execute-os com:
+
+```powershell
+python diagnostico_completo.py
+```
+
+Espero que isso ajude a diagnosticar o projeto GoNetwork AI! O script `diagnostico_completo.py` é o mais importante e deve ser sua primeira escolha para identificar problemas no sistema.

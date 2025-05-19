@@ -1,0 +1,97 @@
+# ![GoNetwork AI](https://via.placeholder.com/400x120/021E33/FFFFFF?text=GoNetwork+AI)
+
+# Especificação Técnica: GoNetwork AI## Sistema Integrado de Gerenciamento Audiovisual para Eventos
+
+## Visão Geral da Interface
+
+### Tela de Splash- **Elemento Principal**: Logo GoNetwork AI animado com efeito de fade-in- **Background**: Gradiente azul profundo (#021E33) para preto- **Animação**: Partículas dinâmicas representando fluxo de trabalho audiovisual- **Duração**: 3 segundos com transição suave para a tela de login- **Elementos adicionais**: Indicador de carregamento discreto na parte inferior
+
+## 1. Processo de Acesso e Configuração Inicial
+
+### 1.1 Autenticação e Gerenciamento de Contas- **Login**: Tela de autenticação com suporte a: - Login por credenciais (email/senha) - Login por integração com Google/Apple - Recuperação de senha segura - Opção "Lembrar-me" para dispositivos confiáveis- **Cadastro**: Para novos usuários, com níveis diferenciados: - Administrador (acesso total) - Colaborador (acesso restrito baseado em função) - Cliente (acesso limitado a aprovações e visualizações)
+
+### 1.2 Dashboard Inicial- **Visão Geral**: Resumo dos eventos ativos e próximos- **Notificações**: Centro de alertas sobre prazos, aprovações pendentes e entregas- **Métricas Rápidas**: Progresso de entregas, status de projetos- **Navegação Principal**: Acesso a todas as áreas funcionais
+
+### 1.3 Gerenciamento de Perfil e Preferências- **Perfil de Usuário**: Foto, bio, especialidades técnicas, portfólio- **Configurações**: Notificações, tema, idioma- **Disponibilidade**: Calendário de disponibilidade para eventos
+
+## 2. Criação e Configuração de Eventos
+
+### 2.1 Criação do Evento- **Assistente de Criação**: Wizard passo-a-passo para definição de evento- **Informações Básicas**: Nome, data, local, cliente, natureza do evento- **Escopo**: Tipo de cobertura, entregáveis contratados- **Importação**: Opção para duplicar estrutura de eventos anteriores
+
+### 2.2 Montagem da Equipe- **Banco de Talentos**: Seleção de profissionais com filtros por: - Especialidade técnica - Disponibilidade de agenda - Experiência prévia - Avaliações de projetos anteriores- **Cadastro de Membros**: - Informações pessoais e contato - Função específica no projeto - Equipamentos sob responsabilidade (detalhamento técnico)- **Cadastro de Cliente**: - Permissões específicas:   - Acesso à aba de edições   - Capacidade de comentar e aprovar materiais   - Visualização de timeline de entregas
+
+### 2.3 Cadastro de Equipamentos- **Inventário**: Lista completa do equipamento disponível- **Alocação**: Atribuição de equipamentos a membros da equipe- **Checklist**: Verificação de estado e acessórios
+
+## 3. Desenvolvimento do Briefing
+
+### 3.1 Abas "Informações Gerais", "Estilo" e "Referências"- Permanecem como caixas de texto multilinha conforme especificação atual
+
+### 3.2 Aba: Patrocinadores#### Interface e Comportamento- Lista dinâmica de patrocinadores únicos com suas múltiplas ações- **Seleção de Patrocinador**: `QComboBox` com opção de adicionar novo- **Campos por Ação/Ativação**:
+
+| Campo | Componente | Comportamento ||-------|------------|---------------|| Ação/Ativação | `QLineEdit` | Texto livre para descrição da ativação || Horário de captação | `QTimeEdit` + `QCheckBox` | Seletor de hora + opção "Horário Livre" || Responsável pela captação | `QComboBox` | Populado com membros da equipe do evento atual || Entrega Real Time? | `QCheckBox` | Toggle Sim/Não || Horário da entrega RT | `QTimeEdit` | Habilitado apenas se "Entrega Real Time" = Sim || Editor responsável | `QComboBox` | Populado com editores da equipe cadastrada || Orientações | `QTextEdit` | Campo multilinha para instruções específicas |
+
+#### Controles- Botão `+ Nova Ação` em cada grupo de patrocinador- Botão `+ Novo Patrocinador` no topo ou final da lista- Todo o conteúdo exibido em `QScrollArea` com agrupamento visual claro
+
+### 3.3 Aba: Programação#### Comportamento- Lista dinâmica de atrações organizadas por palco- Permite adição de múltiplos palcos e múltiplas atrações por palco#### Interface- **Campos por Atração**:
+
+| Campo | Componente | Comportamento ||-------|------------|---------------|| Palco | `QComboBox` ou `QLineEdit` | Com sugestões/autocompletar || Artista | `QLineEdit` | Nome da atração/artista || Horário | `QTimeEdit` | Seletor de horário padrão || Observações | `QTextEdit` | Campo opcional para informações adicionais |
+
+### 3.4 Aba: Entregas#### Divisão em Blocos1. **Bloco Real Time**:  - **Lista dinâmica de entregas individuais**, cada uma contendo:    | Campo | Componente | Comportamento |    |-------|------------|---------------|    | Título/Descrição | `QLineEdit` | Texto livre para descrição da entrega |    | Horário de entrega | `QTimeEdit` | Seletor de hora específica para esta entrega |    | Editor responsável | `QComboBox` | Populado com editores da equipe |    | Plataforma de destino | `QGroupBox` com `QCheckBox` para cada opção | Múltipla seleção: Reels, Stories, Feed, Outros |    | Orientações específicas | `QTextEdit` | Instruções detalhadas para esta entrega |  - **Teaser final**: `QTimeEdit` para horário específico de entrega    2. **Bloco Pós-Evento**:  - Prazo de entrega (`QSpinBox` com seleção de unidade: horas/dias)  - Opções de pacote (`QCheckBox` para cada tipo):    - Aftermovie    - Vídeo de melhores momentos    - Versões individuais por patrocinador  - Anotações adicionais (`QTextEdit`)
+
+## 4. Geração e Gerenciamento da Timeline
+
+### 4.1 Geração Automática- **Botão "Gerar Timeline"**: - Coleta dados de todas as abas do briefing - Organiza cronologicamente todas as informações - Cria visualização integrada com todos os elementos- **Fontes de Dados**: - **Patrocinadores**: Horários de captação e entregas RT - **Programação**: Sequência de atrações por palco - **Entregas**: Horários específicos de cada entrega Real Time, prazos finais
+
+### 4.2 Visualização e Gerenciamento da Timeline- **Interface Visual**: Linha do tempo interativa com: - Zoom para diferentes escalas temporais (hora, período, dia inteiro) - Agrupamento por tipo (captação, edição, entrega) - Codificação por cores para diferentes atividades- **Filtros**: Visualização por responsável, por tipo de tarefa- **Conflitos**: Detecção automática de sobreposições críticas
+
+### 4.3 Atribuição e Ajuste de Tarefas- **Arrastar e Soltar**: Reordenamento e realocação de tarefas- **Redistribuição**: Balanceamento de carga entre membros da equipe- **Alerta de Viabilidade**: Sistema de verificação de tempo mínimo para execução
+
+### 4.4 Sistema de Acompanhamento- **Status Visual**: - Verde: Itens concluídos - Vermelho: Itens atrasados - Cor padrão: Itens em andamento- **Atualizações em Tempo Real**: Sincronização entre dispositivos- **Histórico de Alterações**: Registro de mudanças na timeline
+
+## 5. Central de Edição e Aprovação
+
+### 5.1 Interface do Editor- **Painel de Tarefas**: Lista de edições atribuídas com: - Prazos - Especificações técnicas - Material bruto relacionado- **Upload de Edições**: Sistema para envio de cortes- **Histórico de Versões**: Controle de diferentes iterações
+
+### 5.2 Interface de Revisão- **Reprodutor de Vídeo**: Player integrado com controles avançados- **Sistema de Comentários**: Marcação temporal no vídeo- **Ferramentas de Anotação**: Destaque visual sobre frames- **Comunicação**: Chat contextual por entrega/vídeo
+
+### 5.3 Fluxo de Aprovação- **Níveis de Aprovação**: Configuração de fluxo (interno → cliente)- **Notificações**: Alertas para novas versões e comentários- **Registro de Decisões**: Histórico de aprovações/rejeições
+
+## 6. Monitoramento de Entregas
+
+### 6.1 Painel de Controle- **Visão Geral**: Resumo de status de todas as entregas- **Filtros**: Por prazo, status, responsável, tipo- **Alertas**: Sistema de notificações para atrasos e prazos próximos
+
+### 6.2 Sistema de Status- **Estados Possíveis**: - Pendente - Em andamento - Entregue para revisão - Em revisão - Aprovada - Em alteração - Concluída- **Transições**: Regras claras para mudança de estado- **Timeline Individual**: Histórico de evolução de cada entrega
+
+### 6.3 Estatísticas e Métricas- **Taxa de Conclusão**: Porcentagem de entregas finalizadas- **Tempo Médio**: Análise de tempo por tipo de entrega- **Gargalos**: Identificação de pontos críticos no fluxo
+
+## 7. Biblioteca de Assets
+
+### 7.1 Repositório Central- **Categorias**: - Logomarcas e identidade visual - Trilhas sonoras e efeitos - Transições e efeitos visuais - Material bruto - Vídeos de referência- **Organização**: Sistema de tags e metadados
+
+### 7.2 Gerenciamento de Arquivos- **Upload**: Suporte para diversos formatos- **Previsualização**: Miniaturas e reprodução rápida- **Busca**: Sistema avançado com filtros múltiplos- **Controle de Versões**: Para assets que evoluem ao longo do projeto
+
+### 7.3 Integração com Ferramentas de Edição- **Download Direto**: Para software de edição- **Templates**: Modelos pré-configurados- **Presets**: Configurações salvas para processamento
+
+## 8. Encerramento e Avaliação de Projeto
+
+### 8.1 Arquivamento de Projeto- **Pacote Final**: Compilação de todas as entregas- **Documentação**: Registro completo do fluxo de trabalho- **Backup**: Arquivamento seguro de todos os materiais
+
+### 8.2 Avaliação de Desempenho- **Feedback**: Sistema de avaliação para cada membro da equipe- **Métricas**: Análise de produtividade e qualidade- **Lições Aprendidas**: Registro de sucessos e desafios
+
+### 8.3 Relatório Final- **Resumo Executivo**: Visão geral do projeto- **Estatísticas de Entrega**: Quantidades, tempos, aprovações- **Análise de Eficiência**: Comparação com benchmarks e projetos anteriores
+
+## Requisitos Técnicos Gerais
+
+### Interface e Experiência do Usuário- Design responsivo para diferentes dispositivos- Temas claro/escuro- Atalhos de teclado para operações frequentes- Modo offline com sincronização posterior
+
+### Segurança e Dados- Controle de acesso baseado em papéis- Criptografia de dados sensíveis- Backup automático- Conformidade com LGPD/GDPR
+
+### Desempenho e Escalabilidade- Otimização para lidar com projetos grandes- Paginação e carregamento sob demanda- Processamento em segundo plano para tarefas pesadas
+
+### Integrações Externas- Calendários (Google, Outlook)- Armazenamento em nuvem (Dropbox, Google Drive)- Software de edição (Adobe Premiere, Final Cut)- Redes sociais para publicação direta
+
+## Resultado Esperado Final
+
+Uma plataforma abrangente que unifica todo o ciclo de vida de produção audiovisual em eventos, desde o planejamento inicial até a entrega final, otimizando fluxos de trabalho, facilitando a colaboração entre equipes e garantindo entregas de alta qualidade dentro dos prazos estabelecidos.
+
+O GoNetwork AI estabelece um novo padrão para gerenciamento audiovisual, eliminando a fragmentação de ferramentas típica do setor e oferecendo uma experiência integrada que aumenta a eficiência operacional e a satisfação do cliente.
