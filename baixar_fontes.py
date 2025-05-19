@@ -1,11 +1,12 @@
 import os
+
 import requests
 
 os.makedirs("resources/fonts", exist_ok=True)
 
 urls = {
     "Roboto-Bold.ttf": "https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf",
-    "Roboto-Regular.ttf": "https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Regular.ttf"
+    "Roboto-Regular.ttf": "https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Regular.ttf",
 }
 
 for nome, url in urls.items():

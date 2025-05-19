@@ -1,39 +1,43 @@
+import json
 import os
 import sqlite3
-import json
 from datetime import datetime
+
 
 class DatabaseManager:
     def __init__(self, db_path="./database/gonetwork.db"):
         # Garantir que o diretório existe
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
-        
+
         self.db_path = db_path
         self.connection = None
         self.cursor = None
-        
+
     def connect(self):
         try:
             self.connection = sqlite3.connect(self.db_path)
-            self.connection.row_factory = sqlite3.Row  # Para obter resultados como dicionários
+            self.connection.row_factory = (
+                sqlite3.Row
+            )  # Para obter resultados como dicionários
             self.cursor = self.connection.cursor()
             return True
         except sqlite3.Error as e:
             print(f"Erro ao conectar ao banco de dados: {e}")
             return False
-    
+
     def disconnect(self):
         if self.connection:
             self.connection.close()
             self.connection = None
             self.cursor = None
-    
+
     def create_tables(self):
         self.connect()
-        
+
         try:
             # Usuários
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT NOT NULL UNIQUE,
@@ -45,10 +49,12 @@ class DatabaseManager:
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
-            ''')
-            
+            """
+            )
+
             # Eventos
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
@@ -63,10 +69,12 @@ class DatabaseManager:
                     FOREIGN KEY (client_id) REFERENCES users (id),
                     FOREIGN KEY (created_by) REFERENCES users (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Equipe do Evento
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS event_team (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id INTEGER,
@@ -76,10 +84,12 @@ class DatabaseManager:
                     FOREIGN KEY (event_id) REFERENCES events (id),
                     FOREIGN KEY (user_id) REFERENCES users (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Briefing
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS briefings (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id INTEGER,
@@ -90,20 +100,24 @@ class DatabaseManager:
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (event_id) REFERENCES events (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Patrocinadores
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS sponsors (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id INTEGER,
                     name TEXT NOT NULL,
                     FOREIGN KEY (event_id) REFERENCES events (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Ações dos Patrocinadores
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS sponsor_actions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     sponsor_id INTEGER,
@@ -119,20 +133,24 @@ class DatabaseManager:
                     FOREIGN KEY (responsible_id) REFERENCES users (id),
                     FOREIGN KEY (editor_id) REFERENCES users (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Palcos
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS stages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id INTEGER,
                     name TEXT NOT NULL,
                     FOREIGN KEY (event_id) REFERENCES events (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Programação/Atrações
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS attractions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     stage_id INTEGER,
@@ -141,10 +159,12 @@ class DatabaseManager:
                     notes TEXT,
                     FOREIGN KEY (stage_id) REFERENCES stages (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Entregas Real Time
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS realtime_deliveries (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id INTEGER,
@@ -156,10 +176,12 @@ class DatabaseManager:
                     FOREIGN KEY (event_id) REFERENCES events (id),
                     FOREIGN KEY (editor_id) REFERENCES users (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Entregas Pós-Evento
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS post_deliveries (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id INTEGER,
@@ -171,10 +193,12 @@ class DatabaseManager:
                     notes TEXT,
                     FOREIGN KEY (event_id) REFERENCES events (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Timeline
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS timeline_items (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id INTEGER,
@@ -187,10 +211,12 @@ class DatabaseManager:
                     FOREIGN KEY (event_id) REFERENCES events (id),
                     FOREIGN KEY (responsible_id) REFERENCES users (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Vídeos/Edições
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS videos (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id INTEGER,
@@ -205,10 +231,12 @@ class DatabaseManager:
                     FOREIGN KEY (event_id) REFERENCES events (id),
                     FOREIGN KEY (editor_id) REFERENCES users (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Comentários em Vídeos
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS video_comments (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     video_id INTEGER,
@@ -219,10 +247,12 @@ class DatabaseManager:
                     FOREIGN KEY (video_id) REFERENCES videos (id),
                     FOREIGN KEY (user_id) REFERENCES users (id)
                 )
-            ''')
-            
+            """
+            )
+
             # Assets
-            self.cursor.execute('''
+            self.cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS assets (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_id INTEGER,
@@ -235,8 +265,9 @@ class DatabaseManager:
                     FOREIGN KEY (event_id) REFERENCES events (id),
                     FOREIGN KEY (uploaded_by) REFERENCES users (id)
                 )
-            ''')
-            
+            """
+            )
+
             self.connection.commit()
             return True
         except sqlite3.Error as e:
@@ -244,9 +275,9 @@ class DatabaseManager:
             return False
         finally:
             self.disconnect()
-    
+
     # Métodos auxiliares para executar operações no banco de dados
-    
+
     def execute_query(self, query, params=None):
         try:
             self.connect()
@@ -261,7 +292,7 @@ class DatabaseManager:
             return False
         finally:
             self.disconnect()
-    
+
     def fetch_one(self, query, params=None):
         try:
             self.connect()
@@ -269,13 +300,17 @@ class DatabaseManager:
                 self.cursor.execute(query, params)
             else:
                 self.cursor.execute(query)
-            return dict(self.cursor.fetchone()) if self.cursor.fetchone() else None
+            return (
+                dict(self.cursor.fetchone())
+                if self.cursor.fetchone()
+                else None
+            )
         except sqlite3.Error as e:
             print(f"Erro ao buscar registro: {e}")
             return None
         finally:
             self.disconnect()
-    
+
     def fetch_all(self, query, params=None):
         try:
             self.connect()
@@ -289,14 +324,14 @@ class DatabaseManager:
             return []
         finally:
             self.disconnect()
-    
+
     def insert(self, table, data):
-        keys = ', '.join(data.keys())
-        placeholders = ', '.join(['?' for _ in data])
+        keys = ", ".join(data.keys())
+        placeholders = ", ".join(["?" for _ in data])
         values = tuple(data.values())
-        
+
         query = f"INSERT INTO {table} ({keys}) VALUES ({placeholders})"
-        
+
         try:
             self.connect()
             self.cursor.execute(query, values)
@@ -308,14 +343,14 @@ class DatabaseManager:
             return None
         finally:
             self.disconnect()
-    
+
     def update(self, table, data, condition):
-        set_values = ', '.join([f"{k} = ?" for k in data.keys()])
-        where_clause = ' AND '.join([f"{k} = ?" for k in condition.keys()])
+        set_values = ", ".join([f"{k} = ?" for k in data.keys()])
+        where_clause = " AND ".join([f"{k} = ?" for k in condition.keys()])
         values = tuple(list(data.values()) + list(condition.values()))
-        
+
         query = f"UPDATE {table} SET {set_values} WHERE {where_clause}"
-        
+
         try:
             self.connect()
             self.cursor.execute(query, values)
@@ -326,13 +361,13 @@ class DatabaseManager:
             return False
         finally:
             self.disconnect()
-    
+
     def delete(self, table, condition):
-        where_clause = ' AND '.join([f"{k} = ?" for k in condition.keys()])
+        where_clause = " AND ".join([f"{k} = ?" for k in condition.keys()])
         values = tuple(condition.values())
-        
+
         query = f"DELETE FROM {table} WHERE {where_clause}"
-        
+
         try:
             self.connect()
             self.cursor.execute(query, values)

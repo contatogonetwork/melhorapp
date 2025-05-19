@@ -403,5 +403,5 @@ alert_style = {
             border-radius: 5px;
             padding: 10px;
         }}
-    """
+    """,
 }
