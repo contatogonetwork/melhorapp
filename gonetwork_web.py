@@ -1018,7 +1018,7 @@ def reports_page():
                 cursor.execute("""
                     SELECT status, COUNT(*) as count 
                     FROM events 
-                    WHERE event_date BETWEEN ? AND ?
+                    WHERE date BETWEEN ? AND ?
                     GROUP BY status
                 """, (start_date_str, end_date_str))
                 
@@ -1047,6 +1047,8 @@ def reports_page():
                     )
                 else:
                     st.info(f"Nenhum evento encontrado no período de {start_date.strftime('%d/%m/%Y')} a {end_date.strftime('%d/%m/%Y')}")
+            except Exception as e:
+                st.error(f"Erro ao gerar relatório: {e}")
             finally:
                 conn.close()
     
@@ -1061,7 +1063,7 @@ def reports_page():
                     SELECT v.status, COUNT(*) as count 
                     FROM videos v
                     INNER JOIN events e ON v.event_id = e.id
-                    WHERE e.event_date BETWEEN ? AND ?
+                    WHERE e.date BETWEEN ? AND ?
                     GROUP BY v.status
                 """, (start_date_str, end_date_str))
                 
@@ -1090,6 +1092,8 @@ def reports_page():
                     )
                 else:
                     st.info(f"Nenhum vídeo encontrado no período de {start_date.strftime('%d/%m/%Y')} a {end_date.strftime('%d/%m/%Y')}")
+            except Exception as e:
+                st.error(f"Erro ao gerar relatório: {e}")
             finally:
                 conn.close()
     
@@ -1104,7 +1108,7 @@ def reports_page():
                     SELECT c.name as client_name, COUNT(e.id) as event_count 
                     FROM events e
                     INNER JOIN clients c ON e.client_id = c.id
-                    WHERE e.event_date BETWEEN ? AND ?
+                    WHERE e.date BETWEEN ? AND ?
                     GROUP BY c.name
                     ORDER BY event_count DESC
                 """, (start_date_str, end_date_str))
@@ -1134,6 +1138,8 @@ def reports_page():
                     )
                 else:
                     st.info(f"Nenhum evento encontrado no período de {start_date.strftime('%d/%m/%Y')} a {end_date.strftime('%d/%m/%Y')}")
+            except Exception as e:
+                st.error(f"Erro ao gerar relatório: {e}")
             finally:
                 conn.close()
     
@@ -1146,13 +1152,13 @@ def reports_page():
                 cursor = conn.cursor()
                 cursor.execute("""
                     SELECT 
-                        strftime('%Y-%m', e.event_date) as month,
+                        strftime('%Y-%m', e.date) as month,
                         COUNT(DISTINCT e.id) as event_count,
                         COUNT(DISTINCT v.id) as video_count,
                         SUM(CASE WHEN v.status = 'Concluído' THEN 1 ELSE 0 END) as completed_videos
                     FROM events e
                     LEFT JOIN videos v ON e.id = v.event_id
-                    WHERE e.event_date BETWEEN ? AND ?
+                    WHERE e.date BETWEEN ? AND ?
                     GROUP BY month
                     ORDER BY month
                 """, (start_date_str, end_date_str))
@@ -1165,7 +1171,7 @@ def reports_page():
                         'Mês': [row["month"] for row in results],
                         'Eventos': [row["event_count"] for row in results],
                         'Vídeos': [row["video_count"] for row in results],
-                        'Concluídos': [row["completed_videos"] for row in results]
+                        'Concluídos': [row["completed_videos"] or 0 for row in results]
                     })
                     
                     # Calcular taxa de conclusão
@@ -1187,6 +1193,8 @@ def reports_page():
                     )
                 else:
                     st.info(f"Nenhum dado encontrado no período de {start_date.strftime('%d/%m/%Y')} a {end_date.strftime('%d/%m/%Y')}")
+            except Exception as e:
+                st.error(f"Erro ao gerar relatório: {e}")
             finally:
                 conn.close()
 
