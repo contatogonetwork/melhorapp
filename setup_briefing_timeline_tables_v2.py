@@ -59,9 +59,7 @@ def create_tables():
     db = Database()
 
     print("\n[1] Criando tabelas para a aba Briefing...")
-    briefing_sql_path = os.path.join(
-        "database", "schema", "briefing_tables.sql"
-    )
+    briefing_sql_path = os.path.join("database", "schema", "briefing_tables.sql")
 
     if execute_sql_file(briefing_sql_path, db):
         print("  ✓ Tabelas de Briefing criadas com sucesso!")
@@ -69,9 +67,7 @@ def create_tables():
         print("  ✗ Falha ao criar tabelas de Briefing")
 
     print("\n[2] Criando tabelas para a aba Timeline...")
-    timeline_sql_path = os.path.join(
-        "database", "schema", "timeline_events.sql"
-    )
+    timeline_sql_path = os.path.join("database", "schema", "timeline_events.sql")
 
     if execute_sql_file(timeline_sql_path, db):
         print("  ✓ Tabelas de Timeline criadas com sucesso!")

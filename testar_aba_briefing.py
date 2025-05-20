@@ -26,9 +26,7 @@ if __name__ == "__main__":
     print("Testando aba Briefing...")
     print("Verifique se todas as funcionalidades estão operando corretamente:")
     print("1. Seleção de evento funciona")
-    print(
-        "2. Todas as sub-abas estão presentes: Info, Estilo, Referências, etc."
-    )
+    print("2. Todas as sub-abas estão presentes: Info, Estilo, Referências, etc.")
     print("3. Os formulários estão sendo exibidos corretamente")
     print("4. Os botões de salvar e gerar timeline funcionam")
 

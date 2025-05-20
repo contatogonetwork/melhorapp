@@ -20,9 +20,7 @@ def check_docstrings():
             if file.endswith(".py"):
                 files_checked += 1
                 module_path = (
-                    os.path.join(root, file)[2:-3]
-                    .replace("/", ".")
-                    .replace("\\", ".")
+                    os.path.join(root, file)[2:-3].replace("/", ".").replace("\\", ".")
                 )
 
                 try:
@@ -34,9 +32,7 @@ def check_docstrings():
 
                         # Verificar funções e métodos
                         for name, obj in inspect.getmembers(module):
-                            if inspect.isfunction(obj) or inspect.ismethod(
-                                obj
-                            ):
+                            if inspect.isfunction(obj) or inspect.ismethod(obj):
                                 functions_checked += 1
                                 if obj.__doc__:
                                     functions_with_docstrings += 1
@@ -45,17 +41,13 @@ def check_docstrings():
                     pass
 
     docstring_rate = (
-        functions_with_docstrings / functions_checked
-        if functions_checked
-        else 0
+        functions_with_docstrings / functions_checked if functions_checked else 0
     )
     print(f"Arquivos verificados: {files_checked}")
     print(
         f"Funções com docstrings: {functions_with_docstrings}/{functions_checked} ({docstring_rate:.1%})"
     )
-    return (
-        docstring_rate >= 0.7
-    )  # Sucesso se 70% ou mais das funções têm docstrings
+    return docstring_rate >= 0.7  # Sucesso se 70% ou mais das funções têm docstrings
 
 
 def check_error_handling():
@@ -89,9 +81,7 @@ def check_error_handling():
                         r"logging\.(error|warning|critical|exception)", content
                     )
 
-                    if has_try_except and (
-                        has_specific_catches or has_logging
-                    ):
+                    if has_try_except and (has_specific_catches or has_logging):
                         files_with_good_error_handling += 1
 
                 except:
@@ -115,9 +105,7 @@ if __name__ == "__main__":
     error_handling_ok = check_error_handling()
 
     print("\nResultados:")
-    print(
-        f"- Documentação: {'✓ BOM' if docstrings_ok else '✗ PRECISA MELHORAR'}"
-    )
+    print(f"- Documentação: {'✓ BOM' if docstrings_ok else '✗ PRECISA MELHORAR'}")
     print(
         f"- Tratamento de Erros: {'✓ BOM' if error_handling_ok else '✗ PRECISA MELHORAR'}"
     )

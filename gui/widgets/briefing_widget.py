@@ -55,9 +55,7 @@ class BriefingWidget(QWidget):
 
         # Botão de gerar timeline
         self.timeline_button = QPushButton("Gerar Timeline")
-        self.timeline_button.setIcon(
-            QIcon("./resources/icons/timeline-generate.svg")
-        )
+        self.timeline_button.setIcon(QIcon("./resources/icons/timeline-generate.svg"))
         self.timeline_button.setStyleSheet(style.button_style)
         self.timeline_button.setFixedHeight(36)
 
@@ -105,9 +103,7 @@ class BriefingWidget(QWidget):
 
         info_edit = QTextEdit()
         info_edit.setStyleSheet(style.input_style)
-        info_edit.setPlaceholderText(
-            "Insira informações gerais sobre o evento..."
-        )
+        info_edit.setPlaceholderText("Insira informações gerais sobre o evento...")
 
         layout.addWidget(info_edit)
 
@@ -162,9 +158,7 @@ class BriefingWidget(QWidget):
         instructions = QLabel(
             "Adicione patrocinadores e suas ações/ativações durante o evento:"
         )
-        instructions.setStyleSheet(
-            f"color: {style.foreground_color}; font-size: 14px;"
-        )
+        instructions.setStyleSheet(f"color: {style.foreground_color}; font-size: 14px;")
         instructions.setWordWrap(True)
 
         layout.addWidget(instructions)
@@ -231,9 +225,7 @@ class BriefingWidget(QWidget):
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
         separator.setFrameShadow(QFrame.Shadow.Sunken)
-        separator.setStyleSheet(
-            f"background-color: {style.current_line_color};"
-        )
+        separator.setStyleSheet(f"background-color: {style.current_line_color};")
 
         layout.addWidget(separator)
 
@@ -274,9 +266,7 @@ class BriefingWidget(QWidget):
         header = QHBoxLayout()
 
         action_title = QLabel("Ação / Ativação")
-        action_title.setStyleSheet(
-            f"color: {style.purple_color}; font-weight: bold;"
-        )
+        action_title.setStyleSheet(f"color: {style.purple_color}; font-weight: bold;")
 
         remove_btn = QPushButton()
         remove_btn.setIcon(QIcon("./resources/icons/trash.svg"))
@@ -368,9 +358,7 @@ class BriefingWidget(QWidget):
         instructions = QLabel(
             "Adicione a programação completa do evento, organizada por palco:"
         )
-        instructions.setStyleSheet(
-            f"color: {style.foreground_color}; font-size: 14px;"
-        )
+        instructions.setStyleSheet(f"color: {style.foreground_color}; font-size: 14px;")
         instructions.setWordWrap(True)
 
         layout.addWidget(instructions)
@@ -433,9 +421,7 @@ class BriefingWidget(QWidget):
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
         separator.setFrameShadow(QFrame.Shadow.Sunken)
-        separator.setStyleSheet(
-            f"background-color: {style.current_line_color};"
-        )
+        separator.setStyleSheet(f"background-color: {style.current_line_color};")
 
         layout.addWidget(separator)
 
@@ -660,9 +646,7 @@ class BriefingWidget(QWidget):
         # Notas adicionais
         notes = QTextEdit()
         notes.setStyleSheet(style.input_style)
-        notes.setPlaceholderText(
-            "Anotações adicionais para entregas pós-evento..."
-        )
+        notes.setPlaceholderText("Anotações adicionais para entregas pós-evento...")
         notes.setMaximumHeight(100)
 
         # Adicionar ao formulário

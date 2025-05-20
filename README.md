@@ -16,6 +16,8 @@ O GoNetwork AI é uma aplicação desktop desenvolvida com PySide6 (Qt para Pyth
 - **Edição/Aprovação**: Fluxo de trabalho para edição de conteúdo e aprovação pelo cliente
 - **Entregas**: Controle de entregáveis e prazos
 - **Assets**: Gerenciamento de arquivos e recursos do projeto
+- **Banco de Dados**: SQLite com SQLAlchemy ORM para acesso fácil e seguro aos dados
+- **Acessibilidade**: Recursos completos de acessibilidade para usuários com necessidades especiais
 - **Configurações**: Personalização do sistema
 
 ## Requisitos

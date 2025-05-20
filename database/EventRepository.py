@@ -1,9 +1,8 @@
 import sqlite3
 from datetime import datetime
 
-from utils.logger import get_logger
-
 from .Database import Database
+from utils.logger import get_logger
 
 
 class EventRepository:

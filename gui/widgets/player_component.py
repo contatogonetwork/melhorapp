@@ -19,9 +19,7 @@ import gui.themes.dracula as style
 class VideoPlayerComponent(QWidget):
     """Componente de player de vídeo com controles"""
 
-    positionUpdated = Signal(
-        int
-    )  # Sinal para notificar a posição atual do vídeo
+    positionUpdated = Signal(int)  # Sinal para notificar a posição atual do vídeo
     fullscreenToggled = Signal(
         bool
     )  # Sinal para notificar mudanças no estado de tela cheia
@@ -52,9 +50,7 @@ class VideoPlayerComponent(QWidget):
 
         # Botão Play/Pause
         self.playButton = QPushButton()
-        self.playButton.setIcon(
-            QIcon(os.path.join("resources", "icons", "play.svg"))
-        )
+        self.playButton.setIcon(QIcon(os.path.join("resources", "icons", "play.svg")))
         self.playButton.setFixedSize(32, 32)
         self.playButton.setObjectName("playButton")
         self.playButton.setStyleSheet(style.btn_secondary)
@@ -84,10 +80,7 @@ class VideoPlayerComponent(QWidget):
 
     @Slot()
     def togglePlayPause(self):
-        if (
-            self.mediaPlayer.playbackState()
-            == QMediaPlayer.PlaybackState.PlayingState
-        ):
+        if self.mediaPlayer.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.mediaPlayer.pause()
             self.playButton.setIcon(
                 QIcon(os.path.join("resources", "icons", "play.svg"))
@@ -105,9 +98,7 @@ class VideoPlayerComponent(QWidget):
         total = self.formatTime(self.mediaPlayer.duration())
         self.timeLabel.setText(f"{current} / {total}")
         self.currentPosition = position
-        self.positionUpdated.emit(
-            position
-        )  # Emite o sinal com a posição atual
+        self.positionUpdated.emit(position)  # Emite o sinal com a posição atual
 
     @Slot(int)
     def durationChanged(self, duration):

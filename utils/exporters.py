@@ -36,9 +36,7 @@ class CommentExporter:
                         "text": getattr(comment, "text", ""),
                         "author": getattr(comment, "author", ""),
                         "timestamp": getattr(comment, "timestamp", ""),
-                        "video_timestamp": getattr(
-                            comment, "video_timestamp", 0
-                        ),
+                        "video_timestamp": getattr(comment, "video_timestamp", 0),
                         "is_resolved": getattr(comment, "is_resolved", False),
                     }
 
@@ -47,18 +45,14 @@ class CommentExporter:
                     seconds = comment_dict["video_timestamp"] // 1000
                     minutes = seconds // 60
                     seconds = seconds % 60
-                    comment_dict["formatted_timestamp"] = (
-                        f"{minutes:02d}:{seconds:02d}"
-                    )
+                    comment_dict["formatted_timestamp"] = f"{minutes:02d}:{seconds:02d}"
 
                 comments_data.append(comment_dict)
 
             # Estrutura do arquivo
             data = {
                 "metadata": metadata or {},
-                "export_date": datetime.datetime.now().strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
+                "export_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "comments": comments_data,
                 "total_comments": len(comments_data),
                 "resolved_comments": sum(
@@ -213,9 +207,7 @@ class CommentExporter:
 
             # Comentários detalhados
             elements.append(Spacer(1, 30))
-            elements.append(
-                Paragraph("Comentários Detalhados", subtitle_style)
-            )
+            elements.append(Paragraph("Comentários Detalhados", subtitle_style))
 
             for i, comment in enumerate(comments):
                 elements.append(Spacer(1, 15))
@@ -249,9 +241,7 @@ class CommentExporter:
                 )
 
                 # Texto do comentário
-                elements.append(
-                    Paragraph(getattr(comment, "text", ""), normal_style)
-                )
+                elements.append(Paragraph(getattr(comment, "text", ""), normal_style))
                 elements.append(Spacer(1, 5))
 
             # Rodapé

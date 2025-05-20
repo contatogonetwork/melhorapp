@@ -52,9 +52,7 @@ def test_briefing_repository():
     # Verificar método get_all
     try:
         briefings = briefing_repo.get_all()
-        print(
-            f"  ✓ Método get_all funcionando. {len(briefings)} briefings encontrados"
-        )
+        print(f"  ✓ Método get_all funcionando. {len(briefings)} briefings encontrados")
     except Exception as e:
         print(f"  ✗ Erro ao chamar get_all: {str(e)}")
 
@@ -103,10 +101,7 @@ def test_briefing_repository():
             if update_result:
                 briefing = briefing_repo.get_by_id(briefing_id)
 
-                if (
-                    briefing
-                    and briefing["project_name"] == "Briefing Atualizado"
-                ):
+                if briefing and briefing["project_name"] == "Briefing Atualizado":
                     print("  ✓ Método update funcionando")
                 else:
                     print("  ✗ Erro no método update")
@@ -140,9 +135,7 @@ def check_briefing_widget():
             print("  ✓ Arquivo briefing_widget.py encontrado")
 
             # Verifica a presença de elementos importantes no código
-            with open(
-                "gui/widgets/briefing_widget.py", "r", encoding="utf-8"
-            ) as f:
+            with open("gui/widgets/briefing_widget.py", "r", encoding="utf-8") as f:
                 content = f.read()
 
                 if "class BriefingWidget" in content:
@@ -178,26 +171,19 @@ def check_main_window_integration():
         with open("gui/main_window.py", "r", encoding="utf-8") as f:
             content = f.read()
 
-            if (
-                "from gui.widgets.briefing_widget import BriefingWidget"
-                in content
-            ):
+            if "from gui.widgets.briefing_widget import BriefingWidget" in content:
                 print("  ✓ Importação do BriefingWidget encontrada")
             else:
                 print("  ✗ Importação do BriefingWidget não encontrada")
 
-            if (
-                "self.briefing_widget" in content
-                or "self.briefing_page" in content
-            ):
+            if "self.briefing_widget" in content or "self.briefing_page" in content:
                 print("  ✓ Instância do BriefingWidget criada")
             else:
                 print("  ✗ Instância do BriefingWidget não encontrada")
 
             if (
                 "self.add_widget(self.briefing_widget" in content
-                or "self.stacked_widget.addWidget(self.briefing_widget"
-                in content
+                or "self.stacked_widget.addWidget(self.briefing_widget" in content
                 or "self.pages.addWidget(self.briefing_page)" in content
                 or "pages.addWidget(self.briefing_page)" in content
             ):
@@ -206,9 +192,7 @@ def check_main_window_integration():
                 print("  ✗ BriefingWidget não adicionado ao layout")
 
     except Exception as e:
-        print(
-            f"  ✗ Erro ao verificar integração com a janela principal: {str(e)}"
-        )
+        print(f"  ✗ Erro ao verificar integração com a janela principal: {str(e)}")
 
 
 if __name__ == "__main__":

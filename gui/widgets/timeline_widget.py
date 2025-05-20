@@ -143,9 +143,7 @@ class TimelineView(QGraphicsView):
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setBackgroundBrush(QBrush(QColor(style.background_color)))
         self.setFrameShape(QFrame.Shape.NoFrame)
-        self.setViewportUpdateMode(
-            QGraphicsView.ViewportUpdateMode.FullViewportUpdate
-        )
+        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
 
         # Criar a cena
@@ -180,9 +178,7 @@ class TimelineView(QGraphicsView):
             "Carlos (Drone)",
             "Ana (Coordenação)",
         ]
-        row_height = timeline_height / (
-            len(team_members) + 1
-        )  # +1 para cabeçalho
+        row_height = timeline_height / (len(team_members) + 1)  # +1 para cabeçalho
 
         # Desenhar cabeçalho com horas
         header_rect = QGraphicsRectItem(0, 0, timeline_width, row_height)
@@ -204,9 +200,7 @@ class TimelineView(QGraphicsView):
 
             # Linha vertical da hora
             if i > 0:
-                hour_line = QGraphicsRectItem(
-                    i * hour_width, 0, 1, timeline_height
-                )
+                hour_line = QGraphicsRectItem(i * hour_width, 0, 1, timeline_height)
                 hour_line.setBrush(QBrush(QColor(style.comment_color)))
                 hour_line.setPen(QPen(QColor(style.comment_color)))
                 self.scene.addItem(hour_line)
@@ -232,9 +226,7 @@ class TimelineView(QGraphicsView):
             # Adicionar tarefas para este membro
             self.add_tasks_for_member(i, y_pos, row_height, hour_width)
 
-    def add_tasks_for_member(
-        self, member_index, y_pos, row_height, hour_width
-    ):
+    def add_tasks_for_member(self, member_index, y_pos, row_height, hour_width):
         # Cores para diferentes tipos de tarefas
         task_colors = {
             "captação": QColor(style.purple_color),

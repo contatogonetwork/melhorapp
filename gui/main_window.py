@@ -249,9 +249,7 @@ class MainWindow(QMainWindow):
 
         if hasattr(self, "editing_page"):
             self.editing_page.set_current_user(user)
-            self.editing_page.load_initial_data(
-                EventRepository(), TeamRepository()
-            )
+            self.editing_page.load_initial_data(EventRepository(), TeamRepository())
             self.editing_page.setup_video_sync()
 
     def logout(self):

@@ -83,9 +83,7 @@ class AssetCard(QFrame):
 
         # Tipo do asset
         self.type_label = QLabel(asset_type)
-        self.type_label.setStyleSheet(
-            f"color: {style.comment_color}; font-size: 11px;"
-        )
+        self.type_label.setStyleSheet(f"color: {style.comment_color}; font-size: 11px;")
         self.type_label.setAlignment(Qt.AlignCenter)
 
         # Layout para botões
@@ -151,9 +149,7 @@ class AssetCard(QFrame):
         self.layout.addLayout(self.buttons_layout)
 
     def show_menu(self):
-        self.menu.exec(
-            self.menu_btn.mapToGlobal(QPoint(0, self.menu_btn.height()))
-        )
+        self.menu.exec(self.menu_btn.mapToGlobal(QPoint(0, self.menu_btn.height())))
 
 
 class AssetsWidget(QWidget):

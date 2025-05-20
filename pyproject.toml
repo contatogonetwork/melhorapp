@@ -1,6 +1,6 @@
 [tool.black]
-line-length = 79
-target-version = ['py38']
+line-length = 88
+target-version = ['py39']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -19,15 +19,22 @@ exclude = '''
 
 [tool.isort]
 profile = "black"
-line_length = 79
+line_length = 88
 multi_line_output = 3
 include_trailing_comma = true
+known_third_party = ["PySide6", "numpy", "pandas"]
+known_local_folder = ["gui", "database", "utils"]
 
 [tool.pylint.messages_control]
 disable = "C0111"
 
 [tool.pylint.format]
-max-line-length = "79"
+max-line-length = "88"
+
+[tool.mypy]
+python_version = 3.9
+ignore_missing_imports = true
+strict = true
 
 [mypy]
 python_version = "3.8"

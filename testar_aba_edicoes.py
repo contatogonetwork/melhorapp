@@ -100,9 +100,7 @@ def iniciar_aplicacao():
     # Configurar ambiente para iniciar na aba de Edições
     os.environ["GONETWORK_TEST_MODE"] = "1"
     os.environ["GONETWORK_TEST_USER"] = user_id
-    os.environ["GONETWORK_INITIAL_TAB"] = (
-        "editing"  # Ir direto para a aba de edições
-    )
+    os.environ["GONETWORK_INITIAL_TAB"] = "editing"  # Ir direto para a aba de edições
 
     print("\n=== INICIANDO APLICAÇÃO EM MODO DE TESTE ===")
     print("A aplicação será iniciada diretamente na aba de Edições")

@@ -44,8 +44,7 @@ def confirm_action(title, text):
 def generate_random_string(length=10):
     """Gera uma string aleatória com o comprimento especificado."""
     return "".join(
-        random.choice(string.ascii_letters + string.digits)
-        for _ in range(length)
+        random.choice(string.ascii_letters + string.digits) for _ in range(length)
     )
 
 
@@ -98,8 +97,7 @@ def image_to_pixmap(image_path, max_size=None):
     pixmap = QPixmap(image_path)
 
     if max_size and (
-        pixmap.width() > max_size.width()
-        or pixmap.height() > max_size.height()
+        pixmap.width() > max_size.width() or pixmap.height() > max_size.height()
     ):
         pixmap = pixmap.scaled(
             max_size,
@@ -117,8 +115,7 @@ def bytes_to_pixmap(data, max_size=None):
     pixmap = QPixmap.fromImage(image)
 
     if max_size and (
-        pixmap.width() > max_size.width()
-        or pixmap.height() > max_size.height()
+        pixmap.width() > max_size.width() or pixmap.height() > max_size.height()
     ):
         pixmap = pixmap.scaled(
             max_size,
@@ -144,9 +141,7 @@ def time_since(timestamp):
 
     if isinstance(timestamp, str):
         try:
-            timestamp = datetime.datetime.strptime(
-                timestamp, "%Y-%m-%d %H:%M:%S"
-            )
+            timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
         except:
             return timestamp
 

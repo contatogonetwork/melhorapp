@@ -3,6 +3,7 @@
 
 import sqlite3
 
+from utils.auth import hash_password, verify_password
 from utils.logger import get_logger
 
 

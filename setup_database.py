@@ -344,9 +344,7 @@ def insert_sample_data():
                 "event_id": event_id,
                 "editor_id": editor_id,
                 "title": "Vídeo de Abertura - Evento RefreshCo",
-                "deadline": (datetime.now() + timedelta(days=7)).strftime(
-                    "%Y-%m-%d"
-                ),
+                "deadline": (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d"),
                 "style": "Corporativo Moderno",
                 "status": "Em edição",
                 "video_path": "uploads/20250513_2343_Sleek Riviera Logo_simple_compose_01jv6at3t1e0g80czm73q5m66a.mp4",
@@ -358,9 +356,7 @@ def insert_sample_data():
                 "event_id": event_id,
                 "editor_id": editor_id,
                 "title": "Resumo do Evento - RefreshCo",
-                "deadline": (datetime.now() + timedelta(days=14)).strftime(
-                    "%Y-%m-%d"
-                ),
+                "deadline": (datetime.now() + timedelta(days=14)).strftime("%Y-%m-%d"),
                 "style": "Dinâmico com Motion Graphics",
                 "status": "Planejamento",
                 "video_path": "",
@@ -547,9 +543,7 @@ def apply_edits_schema():
         cursor = conn.cursor()
 
         # Ler o arquivo SQL
-        schema_path = os.path.join(
-            "database", "schema", "video_edits_tables.sql"
-        )
+        schema_path = os.path.join("database", "schema", "video_edits_tables.sql")
         if not os.path.exists(schema_path):
             logger.error(f"Arquivo de esquema não encontrado: {schema_path}")
             return False
@@ -588,10 +582,7 @@ def main():
         os.makedirs("./database")
 
     db_success = setup_database()
-    if (
-        db_success
-        and input("Deseja inserir dados de exemplo? (s/n): ").lower() == "s"
-    ):
+    if db_success and input("Deseja inserir dados de exemplo? (s/n): ").lower() == "s":
         insert_sample_data()
 
     criar_tabelas()

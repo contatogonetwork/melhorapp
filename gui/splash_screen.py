@@ -30,9 +30,7 @@ class SplashScreen(QSplashScreen):
         # Logo
         self.logo_label = QLabel()
         self.logo_label.setAlignment(Qt.AlignCenter)
-        self.logo_label.setText(
-            "GoNetwork AI"
-        )  # Placeholder até termos um logo real
+        self.logo_label.setText("GoNetwork AI")  # Placeholder até termos um logo real
         self.logo_label.setStyleSheet(
             """
             color: #FFFFFF;

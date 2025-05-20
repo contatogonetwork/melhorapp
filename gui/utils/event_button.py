@@ -54,9 +54,7 @@ class EventButton(QObject):
         """Adiciona um novo evento"""
         # Verificar campos
         event_name = event_widget.event_name_input.text()
-        event_date = event_widget.event_date_input.date().toString(
-            "dd/MM/yyyy"
-        )
+        event_date = event_widget.event_date_input.date().toString("dd/MM/yyyy")
         event_location = event_widget.event_location_input.text()
         event_client = event_widget.event_client_input.currentText()
         event_type = event_widget.event_type_input.currentText()
@@ -73,21 +71,13 @@ class EventButton(QObject):
         event_widget.events_table.insertRow(row_count)
 
         # Adicionar dados
-        event_widget.events_table.setItem(
-            row_count, 0, QTableWidgetItem(event_name)
-        )
-        event_widget.events_table.setItem(
-            row_count, 1, QTableWidgetItem(event_date)
-        )
+        event_widget.events_table.setItem(row_count, 0, QTableWidgetItem(event_name))
+        event_widget.events_table.setItem(row_count, 1, QTableWidgetItem(event_date))
         event_widget.events_table.setItem(
             row_count, 2, QTableWidgetItem(event_location)
         )
-        event_widget.events_table.setItem(
-            row_count, 3, QTableWidgetItem(event_client)
-        )
-        event_widget.events_table.setItem(
-            row_count, 4, QTableWidgetItem(event_status)
-        )
+        event_widget.events_table.setItem(row_count, 3, QTableWidgetItem(event_client))
+        event_widget.events_table.setItem(row_count, 4, QTableWidgetItem(event_status))
 
         # Adicionar as ações para a nova linha
         from PySide6.QtCore import QSize
@@ -123,9 +113,7 @@ class EventButton(QObject):
         delete_btn.setIconSize(QSize(16, 16))
         delete_btn.setFixedSize(28, 28)
         delete_btn.setStyleSheet(style.secondary_button_style)
-        delete_btn.clicked.connect(
-            lambda: self.delete_event(event_widget, row_count)
-        )
+        delete_btn.clicked.connect(lambda: self.delete_event(event_widget, row_count))
 
         actions_layout.addWidget(view_btn)
         actions_layout.addWidget(edit_btn)
@@ -139,9 +127,7 @@ class EventButton(QObject):
         event_widget.event_location_input.clear()
         event_widget.event_client_input.setCurrentIndex(0)
 
-        self.show_message(
-            "Sucesso", f"Evento '{event_name}' adicionado com sucesso!"
-        )
+        self.show_message("Sucesso", f"Evento '{event_name}' adicionado com sucesso!")
 
     @Slot()
     def delete_event(self, event_widget, row):
@@ -185,9 +171,7 @@ class EventButton(QObject):
     @Slot()
     def add_team_member(self, widget):
         """Adiciona um novo membro à equipe"""
-        name, ok1 = QInputDialog.getText(
-            None, "Novo membro", "Nome do membro:"
-        )
+        name, ok1 = QInputDialog.getText(None, "Novo membro", "Nome do membro:")
         if not (ok1 and name):
             return
 
@@ -276,9 +260,7 @@ class EventButton(QObject):
         delete_btn.setIconSize(QSize(16, 16))
         delete_btn.setFixedSize(28, 28)
         delete_btn.setStyleSheet(style.secondary_button_style)
-        delete_btn.clicked.connect(
-            lambda: self.delete_team_member(widget, row_count)
-        )
+        delete_btn.clicked.connect(lambda: self.delete_team_member(widget, row_count))
 
         actions_layout.addWidget(edit_btn)
         actions_layout.addWidget(delete_btn)
@@ -293,9 +275,7 @@ class EventButton(QObject):
     @Slot()
     def add_client(self, widget):
         """Adiciona um novo cliente"""
-        company, ok1 = QInputDialog.getText(
-            None, "Novo cliente", "Nome da empresa:"
-        )
+        company, ok1 = QInputDialog.getText(None, "Novo cliente", "Nome da empresa:")
         if not (ok1 and company):
             return
 
@@ -319,9 +299,7 @@ class EventButton(QObject):
 
         # Adicionar dados básicos
         widget.client_table.setItem(row_count, 0, QTableWidgetItem(company))
-        widget.client_table.setItem(
-            row_count, 1, QTableWidgetItem(responsible)
-        )
+        widget.client_table.setItem(row_count, 1, QTableWidgetItem(responsible))
 
         # Email com ícone
         from PySide6.QtCore import QSize
@@ -396,9 +374,7 @@ class EventButton(QObject):
         delete_btn.setIconSize(QSize(16, 16))
         delete_btn.setFixedSize(28, 28)
         delete_btn.setStyleSheet(style.secondary_button_style)
-        delete_btn.clicked.connect(
-            lambda: self.delete_client(widget, row_count)
-        )
+        delete_btn.clicked.connect(lambda: self.delete_client(widget, row_count))
 
         actions_layout.addWidget(view_btn)
         actions_layout.addWidget(edit_btn)
@@ -407,18 +383,14 @@ class EventButton(QObject):
 
         widget.client_table.setCellWidget(row_count, 4, actions_widget)
 
-        self.show_message(
-            "Sucesso", f"Cliente '{company}' adicionado com sucesso!"
-        )
+        self.show_message("Sucesso", f"Cliente '{company}' adicionado com sucesso!")
 
     @Slot()
     def delete_team_member(self, widget, row):
         """Remove um membro da equipe"""
         confirm = QMessageBox()
         confirm.setWindowTitle("Confirmar exclusão")
-        confirm.setText(
-            "Tem certeza que deseja remover este membro da equipe?"
-        )
+        confirm.setText("Tem certeza que deseja remover este membro da equipe?")
         confirm.setIcon(QMessageBox.Question)
         confirm.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         confirm.setDefaultButton(QMessageBox.No)

@@ -26,11 +26,9 @@ def generate_sample_data():
     # Criar a tabela event_team se não existir
     try:
         sql_file_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            'schema',
-            'event_team.sql'
+            os.path.dirname(os.path.abspath(__file__)), "schema", "event_team.sql"
         )
-        with open(sql_file_path, 'r') as sql_file:
+        with open(sql_file_path, "r") as sql_file:
             sql_script = sql_file.read()
             db.execute_query(sql_script)
         print("Tabela event_team criada com sucesso")
@@ -153,12 +151,10 @@ def generate_sample_data():
 
     # Adicionar alguns eventos passados e futuros
     for i in range(5):
-        past_date = (today - timedelta(days=random.randint(5, 60))).strftime(
+        past_date = (today - timedelta(days=random.randint(5, 60))).strftime("%Y-%m-%d")
+        future_date = (today + timedelta(days=random.randint(70, 180))).strftime(
             "%Y-%m-%d"
         )
-        future_date = (
-            today + timedelta(days=random.randint(70, 180))
-        ).strftime("%Y-%m-%d")
 
         events.append(
             {
@@ -194,7 +190,9 @@ def generate_sample_data():
 
     for event_id in event_ids:
         # Cada evento recebe entre 2 e 5 membros aleatórios da equipe
-        selected_members = random.sample(member_ids, random.randint(2, min(5, len(member_ids))))
+        selected_members = random.sample(
+            member_ids, random.randint(2, min(5, len(member_ids)))
+        )
 
         for member_id in selected_members:
             # Inserir na tabela event_team
@@ -207,7 +205,15 @@ def generate_sample_data():
             roles = ["Produtor", "Editor", "Fotógrafo", "Diretor", "Assistente"]
             role = random.choice(roles)
 
-            db.insert(query, (event_id, member_id, role, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            db.insert(
+                query,
+                (
+                    event_id,
+                    member_id,
+                    role,
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                ),
+            )
 
     print("Membros da equipe associados aos eventos com sucesso!")
 

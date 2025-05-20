@@ -47,9 +47,7 @@ class Database:
             # Criar tabelas se não existirem
             self._create_tables()
 
-            self.logger.info(
-                f"Banco de dados inicializado com sucesso: {self.db_path}"
-            )
+            self.logger.info(f"Banco de dados inicializado com sucesso: {self.db_path}")
         except Exception as e:
             self.logger.error(f"Erro ao inicializar banco de dados: {str(e)}")
             raise
@@ -63,9 +61,7 @@ class Database:
         """
         try:
             if self.connection is None:
-                self.connection = sqlite3.connect(
-                    self.db_path, check_same_thread=False
-                )
+                self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
                 self.connection.row_factory = (
                     sqlite3.Row
                 )  # Para acessar colunas pelo nome

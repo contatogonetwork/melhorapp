@@ -2,9 +2,8 @@ import sqlite3
 import uuid
 from datetime import datetime
 
-from utils.logger import get_logger
-
 from .Database import Database
+from utils.logger import get_logger
 
 
 class TimelineRepository:
@@ -68,7 +67,7 @@ class TimelineRepository:
                 timeline_data.get("dependencies"),
                 timeline_data.get("location"),
                 current_time,
-                current_time
+                current_time,
             )
 
             self.db.insert(query, params)
@@ -167,9 +166,17 @@ class TimelineRepository:
 
             # Campos que podem ser atualizados
             fields = [
-                "title", "description", "start_time", "end_time",
-                "responsible_id", "task_type", "status", "priority",
-                "color", "dependencies", "location"
+                "title",
+                "description",
+                "start_time",
+                "end_time",
+                "responsible_id",
+                "task_type",
+                "status",
+                "priority",
+                "color",
+                "dependencies",
+                "location",
             ]
 
             # Construir cláusula SET dinamicamente
@@ -245,7 +252,7 @@ class TimelineRepository:
                 milestone_data.get("description"),
                 milestone_data.get("milestone_time"),
                 milestone_data.get("importance", 3),
-                current_time
+                current_time,
             )
 
             self.db.insert(query, params)
@@ -317,7 +324,7 @@ class TimelineRepository:
                 notification_data.get("message"),
                 0,  # sent = false
                 0,  # read = false
-                current_time
+                current_time,
             )
 
             self.db.insert(query, params)
@@ -358,7 +365,7 @@ class TimelineRepository:
                 history_data.get("previous_value"),
                 history_data.get("new_value"),
                 history_data.get("changed_field"),
-                current_time
+                current_time,
             )
 
             self.db.insert(query, params)

@@ -22,9 +22,7 @@ def create_tables():
     print("\n[1] Criando tabelas para a aba Briefing...")
 
     # Ler e executar o script SQL de briefing
-    briefing_sql_path = os.path.join(
-        "database", "schema", "briefing_tables.sql"
-    )
+    briefing_sql_path = os.path.join("database", "schema", "briefing_tables.sql")
 
     if os.path.exists(briefing_sql_path):
         with open(briefing_sql_path, "r", encoding="utf-8") as sql_file:
@@ -41,9 +39,7 @@ def create_tables():
     print("\n[2] Criando tabelas para a aba Timeline...")
 
     # Ler e executar o script SQL de timeline
-    timeline_sql_path = os.path.join(
-        "database", "schema", "timeline_events.sql"
-    )
+    timeline_sql_path = os.path.join("database", "schema", "timeline_events.sql")
 
     if os.path.exists(timeline_sql_path):
         with open(timeline_sql_path, "r", encoding="utf-8") as sql_file:

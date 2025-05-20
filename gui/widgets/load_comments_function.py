@@ -49,8 +49,7 @@ def load_comments(self):
             comment_item = CommentItem(
                 comment,
                 is_editor=(
-                    self.current_user
-                    and self.current_user.get("role") == "editor"
+                    self.current_user and self.current_user.get("role") == "editor"
                 ),
             )
 

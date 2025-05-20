@@ -116,9 +116,7 @@ class SettingsWidget(QWidget):
         self.language_combo = QComboBox()
         self.language_combo.setStyleSheet(style.combobox_style)
         self.language_combo.setFixedWidth(200)
-        self.language_combo.addItems(
-            ["Português (Brasil)", "English", "Español"]
-        )
+        self.language_combo.addItems(["Português (Brasil)", "English", "Español"])
         self.app_form.addRow("Idioma:", self.language_combo)
 
         # Notificações
@@ -213,9 +211,7 @@ class SettingsWidget(QWidget):
         self.export_dir_layout.addWidget(self.export_dir_input)
         self.export_dir_layout.addWidget(self.export_dir_button)
 
-        self.dirs_form.addRow(
-            "Diretório de exportação:", self.export_dir_layout
-        )
+        self.dirs_form.addRow("Diretório de exportação:", self.export_dir_layout)
 
         # Adicionar grupo de diretórios ao tab geral
         self.general_layout.addWidget(self.dirs_group)
@@ -456,12 +452,8 @@ class SettingsWidget(QWidget):
             if "notifications" not in config:
                 config["notifications"] = {}
 
-            config["notifications"][
-                "enabled"
-            ] = self.notifications_check.isChecked()
-            config["notifications"][
-                "check_interval"
-            ] = self.check_interval.value()
+            config["notifications"]["enabled"] = self.notifications_check.isChecked()
+            config["notifications"]["check_interval"] = self.check_interval.value()
 
             # Diretórios
             if "uploads" not in config:
@@ -473,9 +465,7 @@ class SettingsWidget(QWidget):
             if "video" not in config:
                 config["video"] = {}
 
-            config["video"][
-                "default_quality"
-            ] = self.quality_combo.currentText()
+            config["video"]["default_quality"] = self.quality_combo.currentText()
 
             formats = []
             if self.mp4_check.isChecked():
@@ -516,9 +506,7 @@ class SettingsWidget(QWidget):
             os.makedirs(uploads_path, exist_ok=True)
 
             # Mostrar mensagem de sucesso
-            helpers.show_message(
-                "Sucesso", "Configurações salvas com sucesso!"
-            )
+            helpers.show_message("Sucesso", "Configurações salvas com sucesso!")
 
         except Exception as e:
             helpers.show_message("Erro", f"Erro ao salvar configurações: {e}")

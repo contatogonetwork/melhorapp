@@ -7,8 +7,8 @@ def verificar_tabelas_edicoes():
     try:
         # Verificar ambos os caminhos possíveis para o banco de dados
         db_paths = [
-            os.path.join('database', 'gonetwork.db'),
-            os.path.join('data', 'gonetwork.db')
+            os.path.join("database", "gonetwork.db"),
+            os.path.join("data", "gonetwork.db"),
         ]
 
         conn = None
@@ -27,12 +27,14 @@ def verificar_tabelas_edicoes():
         cursor = conn.cursor()
 
         # Verificar as tabelas da aba de edições
-        tabelas = ['video_edits', 'video_comments', 'editor_deliveries']
+        tabelas = ["video_edits", "video_comments", "editor_deliveries"]
 
         print("\n=== Verificação das tabelas de edição ===")
         for tabela in tabelas:
             # Verificar se a tabela existe
-            cursor.execute(f"SELECT count(*) FROM sqlite_master WHERE type='table' AND name='{tabela}';")
+            cursor.execute(
+                f"SELECT count(*) FROM sqlite_master WHERE type='table' AND name='{tabela}';"
+            )
             existe = cursor.fetchone()[0] > 0
 
             if existe:
@@ -43,7 +45,9 @@ def verificar_tabelas_edicoes():
                 colunas = cursor.fetchall()
                 print(f"  Estrutura da tabela '{tabela}':")
                 for col in colunas:
-                    print(f"    - {col[1]} ({col[2]}){' PRIMARY KEY' if col[5] == 1 else ''}")
+                    print(
+                        f"    - {col[1]} ({col[2]}){' PRIMARY KEY' if col[5] == 1 else ''}"
+                    )
 
                 # Contar registros
                 cursor.execute(f"SELECT count(*) FROM {tabela}")
@@ -66,6 +70,7 @@ def verificar_tabelas_edicoes():
         print(f"Erro ao verificar tabelas de edição: {str(e)}")
         if conn:
             conn.close()
+
 
 if __name__ == "__main__":
     print("Verificando tabelas relacionadas à aba de Edições...")

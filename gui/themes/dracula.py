@@ -15,7 +15,7 @@ yellow_color = "#F1FA8C"
 
 # Variáveis adicionais necessárias
 PRIMARY = purple_color
-PRIMARY_LIGHT = "#CBA5FE" 
+PRIMARY_LIGHT = "#CBA5FE"
 BG_THREE = "#383A59"
 BG_FOUR = "#2D303E"
 SUCCESS = green_color

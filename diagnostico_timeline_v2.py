@@ -52,9 +52,7 @@ def test_timeline_repository():
     result = db.fetch_one(query)
 
     if not result:
-        print(
-            "  ✗ Não foi possível testar a criação de item: nenhum evento encontrado"
-        )
+        print("  ✗ Não foi possível testar a criação de item: nenhum evento encontrado")
         return
 
     event_id = result["id"]
@@ -103,9 +101,7 @@ def test_timeline_repository():
                 print("  ✗ Erro no método get_by_event")
 
             # Testar update
-            update_result = timeline_repo.update(
-                item_id, {"title": "Item Atualizado"}
-            )
+            update_result = timeline_repo.update(item_id, {"title": "Item Atualizado"})
 
             if update_result:
                 item = timeline_repo.get_by_id(item_id)
@@ -122,9 +118,7 @@ def test_timeline_repository():
                 "event_id": event_id,
                 "title": "Marco de Teste",
                 "description": "Descrição do marco de teste",
-                "milestone_time": now.replace(
-                    hour=14, minute=0, second=0
-                ).isoformat(),
+                "milestone_time": now.replace(hour=14, minute=0, second=0).isoformat(),
                 "importance": 4,
             }
 
@@ -138,9 +132,7 @@ def test_timeline_repository():
                 # Testar get_milestones_by_event
                 milestones = timeline_repo.get_milestones_by_event(event_id)
 
-                if milestones and any(
-                    m["id"] == milestone_id for m in milestones
-                ):
+                if milestones and any(m["id"] == milestone_id for m in milestones):
                     print("  ✓ Método get_milestones_by_event funcionando")
                 else:
                     print("  ✗ Erro no método get_milestones_by_event")
@@ -208,9 +200,7 @@ def check_timeline_widget():
             print("  ✓ Arquivo timeline_widget.py encontrado")
 
             # Verifica a presença de elementos importantes no código
-            with open(
-                "gui/widgets/timeline_widget.py", "r", encoding="utf-8"
-            ) as f:
+            with open("gui/widgets/timeline_widget.py", "r", encoding="utf-8") as f:
                 content = f.read()
 
                 if "class TimelineWidget" in content:
@@ -246,26 +236,19 @@ def check_main_window_integration():
         with open("gui/main_window.py", "r", encoding="utf-8") as f:
             content = f.read()
 
-            if (
-                "from gui.widgets.timeline_widget import TimelineWidget"
-                in content
-            ):
+            if "from gui.widgets.timeline_widget import TimelineWidget" in content:
                 print("  ✓ Importação do TimelineWidget encontrada")
             else:
                 print("  ✗ Importação do TimelineWidget não encontrada")
 
-            if (
-                "self.timeline_widget" in content
-                or "self.timeline_page" in content
-            ):
+            if "self.timeline_widget" in content or "self.timeline_page" in content:
                 print("  ✓ Instância do TimelineWidget criada")
             else:
                 print("  ✗ Instância do TimelineWidget não encontrada")
 
             if (
                 "self.add_widget(self.timeline_widget" in content
-                or "self.stacked_widget.addWidget(self.timeline_widget"
-                in content
+                or "self.stacked_widget.addWidget(self.timeline_widget" in content
                 or "self.pages.addWidget(self.timeline_page)" in content
                 or "pages.addWidget(self.timeline_page)" in content
             ):
@@ -274,9 +257,7 @@ def check_main_window_integration():
                 print("  ✗ TimelineWidget não adicionado ao layout")
 
     except Exception as e:
-        print(
-            f"  ✗ Erro ao verificar integração com a janela principal: {str(e)}"
-        )
+        print(f"  ✗ Erro ao verificar integração com a janela principal: {str(e)}")
 
 
 if __name__ == "__main__":

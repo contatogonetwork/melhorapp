@@ -62,6 +62,4 @@ class CommentMarkerWidget(QWidget):
 
             # Desenhar um pequeno retângulo
             marker_width = 2
-            painter.drawRect(
-                x_pos - marker_width // 2, 0, marker_width, height
-            )
+            painter.drawRect(x_pos - marker_width // 2, 0, marker_width, height)

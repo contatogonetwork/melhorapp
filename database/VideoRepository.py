@@ -154,9 +154,7 @@ class VideoRepository:
         Retorna:
         - Lista de edições como dicionários
         """
-        results = self.db.fetch_all(
-            "SELECT * FROM video_edits ORDER BY deadline ASC"
-        )
+        results = self.db.fetch_all("SELECT * FROM video_edits ORDER BY deadline ASC")
 
         return [dict(row) for row in results]
 

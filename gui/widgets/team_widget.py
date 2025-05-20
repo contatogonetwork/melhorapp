@@ -46,9 +46,7 @@ class TeamWidget(QWidget):
         self.add_member_button.clicked.connect(self.adicionar_membro)
 
         self.add_client_button = QPushButton("Adicionar Cliente")
-        self.add_client_button.setIcon(
-            QIcon("./resources/icons/client-add.svg")
-        )
+        self.add_client_button.setIcon(QIcon("./resources/icons/client-add.svg"))
         self.add_client_button.setFixedHeight(36)
         self.add_client_button.setStyleSheet(style.secondary_button_style)
         self.add_client_button.clicked.connect(self.adicionar_cliente)
@@ -483,9 +481,7 @@ class TeamWidget(QWidget):
         if not ok1 or not empresa:
             return
 
-        responsavel, ok2 = QInputDialog.getText(
-            self, "Novo Cliente", "Responsável:"
-        )
+        responsavel, ok2 = QInputDialog.getText(self, "Novo Cliente", "Responsável:")
         if not ok2 or not responsavel:
             return
 

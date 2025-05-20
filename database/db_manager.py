@@ -300,11 +300,7 @@ class DatabaseManager:
                 self.cursor.execute(query, params)
             else:
                 self.cursor.execute(query)
-            return (
-                dict(self.cursor.fetchone())
-                if self.cursor.fetchone()
-                else None
-            )
+            return dict(self.cursor.fetchone()) if self.cursor.fetchone() else None
         except sqlite3.Error as e:
             print(f"Erro ao buscar registro: {e}")
             return None

@@ -32,9 +32,7 @@ def criar_dados_edicoes():
         editores = cursor.fetchall()
 
         if not eventos or not editores:
-            print(
-                "Não foram encontrados eventos ou editores no banco de dados."
-            )
+            print("Não foram encontrados eventos ou editores no banco de dados.")
             print(
                 "Execute primeiro o script setup_database.py para criar dados básicos."
             )

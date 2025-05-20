@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QTabWidget,
     QVBoxLayout,
@@ -14,6 +15,9 @@ from PySide6.QtWidgets import (
 )
 
 import gui.themes.dracula as style
+from database.Database import Database
+from database.UserRepository import UserRepository
+from utils.auth import verify_password
 
 
 class AuthWidget(QWidget):
@@ -169,8 +173,42 @@ class AuthWidget(QWidget):
         self.login_button.clicked.connect(self.on_login)
 
     def on_login(self):
-        # Placeholder - em produção, verificaria as credenciais
-        self.login_successful.emit()
+        # Obter email e senha
+        email = self.email_input.text().strip()
+        password = self.password_input.text()
+
+        # Validação simples
+        if not email or not password:
+            QMessageBox.warning(
+                self, "Erro de Login", "Por favor, preencha todos os campos."
+            )
+            return
+
+        try:
+            # Conectar ao banco de dados
+            db = Database()
+            user_repo = UserRepository(db.connection)
+
+            # Buscar usuário - usando email como username
+            user = user_repo.get_user(email)
+
+            if user and verify_password(password, user["password"]):
+                # Login bem-sucedido
+                QMessageBox.information(self, "Login", "Login bem-sucedido!")
+                self.login_successful.emit()
+            else:
+                # Mostrar mensagem de erro
+                QMessageBox.warning(
+                    self,
+                    "Erro ao fazer login",
+                    "Email ou senha incorretos.",
+                    QMessageBox.StandardButton.Ok,
+                    QMessageBox.StandardButton.Ok,
+                )
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Erro", f"Ocorreu um erro ao conectar: {str(e)}"
+            )
 
     def paintEvent(self, event):
         # Criar o painter

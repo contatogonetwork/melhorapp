@@ -116,14 +116,10 @@ def check_file_consistency():
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        missing_imports = [
-            imp for imp in expected_imports if imp not in content
-        ]
+        missing_imports = [imp for imp in expected_imports if imp not in content]
 
         if missing_imports:
-            results.append(
-                (f"⚠", f"{file_path} falta importações: {missing_imports}")
-            )
+            results.append((f"⚠", f"{file_path} falta importações: {missing_imports}"))
         else:
             results.append((f"✓", f"{file_path} tem importações consistentes"))
 
@@ -160,9 +156,7 @@ def main():
         icons_dir = resources_dir / "icons"
         if icons_dir.exists():
             icon_count = len(list(icons_dir.glob("*.svg")))
-            print(
-                f"✓ Diretório de ícones encontrado com {icon_count} arquivos SVG"
-            )
+            print(f"✓ Diretório de ícones encontrado com {icon_count} arquivos SVG")
         else:
             print("⚠ Diretório de ícones não encontrado")
     else:
@@ -171,9 +165,7 @@ def main():
     print_header("DIAGNÓSTICO CONCLUÍDO")
 
     # Calcular resultado geral
-    all_results = (
-        ui_results + data_results + [(db_status, db_message)] + file_results
-    )
+    all_results = ui_results + data_results + [(db_status, db_message)] + file_results
     success_count = sum(1 for status, _ in all_results if status == "✓")
     warning_count = sum(1 for status, _ in all_results if status == "⚠")
     error_count = sum(1 for status, _ in all_results if status == "✗")
@@ -181,9 +173,7 @@ def main():
     total_checks = len(all_results)
     success_rate = (success_count / total_checks) * 100
 
-    print(
-        f"Taxa de sucesso: {success_rate:.1f}% ({success_count}/{total_checks})"
-    )
+    print(f"Taxa de sucesso: {success_rate:.1f}% ({success_count}/{total_checks})")
     print(f"Avisos: {warning_count}, Erros: {error_count}")
 
     if error_count > 0:

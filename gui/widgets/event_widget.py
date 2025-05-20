@@ -196,9 +196,7 @@ class EventWidget(QWidget):
         # Local do evento
         self.left_form.addWidget(QLabel("Local"))
         self.event_location_input = QLineEdit()
-        self.event_location_input.setPlaceholderText(
-            "Digite o local do evento"
-        )
+        self.event_location_input.setPlaceholderText("Digite o local do evento")
         self.event_location_input.setStyleSheet(style.input_style)
         self.event_location_input.setFixedHeight(36)
         self.left_form.addWidget(self.event_location_input)
@@ -397,9 +395,7 @@ class EventWidget(QWidget):
         status = self.event_status_input.currentText()
 
         if not nome or cliente == "Selecione um cliente":
-            QMessageBox.warning(
-                self, "Erro", "Preencha todos os campos obrigatórios"
-            )
+            QMessageBox.warning(self, "Erro", "Preencha todos os campos obrigatórios")
             return
 
         # Adicionar à tabela de eventos
@@ -464,6 +460,4 @@ class EventWidget(QWidget):
         self.event_location_input.clear()
         self.event_client_input.setCurrentIndex(0)
 
-        QMessageBox.information(
-            self, "Sucesso", f"Evento '{nome}' criado com sucesso!"
-        )
+        QMessageBox.information(self, "Sucesso", f"Evento '{nome}' criado com sucesso!")

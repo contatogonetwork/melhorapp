@@ -32,9 +32,7 @@ def criar_dados_edicoes():
         editor_id2 = "2"  # Usaremos um ID fixo para o segundo editor
 
         # Verificar se os eventos existem
-        cursor.execute(
-            "SELECT COUNT(*) FROM events WHERE id = ?", (evento_id1,)
-        )
+        cursor.execute("SELECT COUNT(*) FROM events WHERE id = ?", (evento_id1,))
         if cursor.fetchone()[0] == 0:
             # Criar evento 1
             cursor.execute(
@@ -55,9 +53,7 @@ def criar_dados_edicoes():
             )
             print("Evento 1 de teste criado.")
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM events WHERE id = ?", (evento_id2,)
-        )
+        cursor.execute("SELECT COUNT(*) FROM events WHERE id = ?", (evento_id2,))
         if cursor.fetchone()[0] == 0:
             # Criar evento 2
             cursor.execute(
@@ -72,18 +68,14 @@ def criar_dados_edicoes():
                     (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d"),
                     "Rio de Janeiro, RJ",
                     "Concluído",
-                    (datetime.now() - timedelta(days=10)).strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    ),
+                    (datetime.now() - timedelta(days=10)).strftime("%Y-%m-%d %H:%M:%S"),
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 ),
             )
             print("Evento 2 de teste criado.")
 
         # Verificar se os editores existem
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE id = ?", (editor_id1,)
-        )
+        cursor.execute("SELECT COUNT(*) FROM users WHERE id = ?", (editor_id1,))
         if cursor.fetchone()[0] == 0:
             # Criar editor 1
             cursor.execute(
@@ -104,9 +96,7 @@ def criar_dados_edicoes():
             )
             print("Editor 1 de teste criado.")
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE id = ?", (editor_id2,)
-        )
+        cursor.execute("SELECT COUNT(*) FROM users WHERE id = ?", (editor_id2,))
         if cursor.fetchone()[0] == 0:
             # Criar editor 2
             cursor.execute(

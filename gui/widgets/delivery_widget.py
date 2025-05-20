@@ -157,9 +157,7 @@ class DeliveryWidget(QWidget):
         self.late_layout = QVBoxLayout(self.late_frame)
 
         self.late_title = QLabel("Atrasadas")
-        self.late_title.setStyleSheet(
-            f"color: {style.comment_color}; font-size: 14px;"
-        )
+        self.late_title.setStyleSheet(f"color: {style.comment_color}; font-size: 14px;")
 
         self.late_value = QLabel("2")
         self.late_value.setStyleSheet(
@@ -183,9 +181,7 @@ class DeliveryWidget(QWidget):
         self.type_filter = QComboBox()
         self.type_filter.setStyleSheet(style.combobox_style)
         self.type_filter.setFixedHeight(36)
-        self.type_filter.addItems(
-            ["Todos os Tipos", "Real Time", "Pós-Evento"]
-        )
+        self.type_filter.addItems(["Todos os Tipos", "Real Time", "Pós-Evento"])
 
         # Filtro por status
         self.status_filter = QComboBox()
@@ -337,19 +333,13 @@ class DeliveryWidget(QWidget):
 
         for row, delivery in enumerate(deliveries):
             # Nome da entrega
-            self.deliveries_table.setItem(
-                row, 0, QTableWidgetItem(delivery[0])
-            )
+            self.deliveries_table.setItem(row, 0, QTableWidgetItem(delivery[0]))
 
             # Prazo
-            self.deliveries_table.setItem(
-                row, 1, QTableWidgetItem(delivery[1])
-            )
+            self.deliveries_table.setItem(row, 1, QTableWidgetItem(delivery[1]))
 
             # Responsável
-            self.deliveries_table.setItem(
-                row, 2, QTableWidgetItem(delivery[2])
-            )
+            self.deliveries_table.setItem(row, 2, QTableWidgetItem(delivery[2]))
 
             # Status
             status_item = QTableWidgetItem(delivery[3])

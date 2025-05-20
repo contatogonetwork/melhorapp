@@ -117,9 +117,7 @@ def verificar_tabelas_edicoes():
                 colunas_ok = True
                 for col in colunas:
                     if col not in colunas_existentes:
-                        print(
-                            f"❌ Tabela {tabela} - Coluna {col} não encontrada"
-                        )
+                        print(f"❌ Tabela {tabela} - Coluna {col} não encontrada")
                         colunas_ok = False
 
                 if colunas_ok:
@@ -207,9 +205,7 @@ def verificar_dados_edicoes():
         cursor.execute("SELECT COUNT(*) FROM editor_deliveries")
         count = cursor.fetchone()[0]
         if count > 0:
-            print(
-                f"✅ Tabela editor_deliveries - {count} registros encontrados"
-            )
+            print(f"✅ Tabela editor_deliveries - {count} registros encontrados")
         else:
             print(f"❌ Tabela editor_deliveries - Nenhum registro encontrado")
 
@@ -309,12 +305,8 @@ def main():
 
     print("\n=== DIAGNÓSTICO CONCLUÍDO ===")
     print(f"Total de verificações: {len(resultados)}")
-    print(
-        f"Verificações bem-sucedidas: {sum(1 for r in resultados.values() if r)}"
-    )
-    print(
-        f"Verificações com problemas: {sum(1 for r in resultados.values() if not r)}"
-    )
+    print(f"Verificações bem-sucedidas: {sum(1 for r in resultados.values() if r)}")
+    print(f"Verificações com problemas: {sum(1 for r in resultados.values() if not r)}")
 
 
 if __name__ == "__main__":

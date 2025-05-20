@@ -210,9 +210,7 @@ class DashboardWidget(QWidget):
         icon.setStyleSheet(f"color: {color};")
 
         title_label = QLabel(title)
-        title_label.setStyleSheet(
-            f"color: {style.comment_color}; font-size: 14px;"
-        )
+        title_label.setStyleSheet(f"color: {style.comment_color}; font-size: 14px;")
 
         header_layout.addWidget(icon)
         header_layout.addWidget(title_label)

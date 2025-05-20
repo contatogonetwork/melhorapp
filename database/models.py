@@ -31,9 +31,7 @@ class User(BaseModel):
             self.load()
 
     def load(self):
-        user = self.db.fetch_one(
-            "SELECT * FROM users WHERE id = ?", (self.id,)
-        )
+        user = self.db.fetch_one("SELECT * FROM users WHERE id = ?", (self.id,))
         if user:
             self.username = user["username"]
             self.email = user["email"]
@@ -47,9 +45,7 @@ class User(BaseModel):
         return False
 
     def authenticate(self, username, password):
-        user = self.db.fetch_one(
-            "SELECT * FROM users WHERE username = ?", (username,)
-        )
+        user = self.db.fetch_one("SELECT * FROM users WHERE username = ?", (username,))
         if user and bcrypt.checkpw(
             password.encode("utf-8"), user["password"].encode("utf-8")
         ):
@@ -145,9 +141,7 @@ class Event(BaseModel):
             self.load()
 
     def load(self):
-        event = self.db.fetch_one(
-            "SELECT * FROM events WHERE id = ?", (self.id,)
-        )
+        event = self.db.fetch_one("SELECT * FROM events WHERE id = ?", (self.id,))
         if event:
             self.name = event["name"]
             self.start_date = event["start_date"]
@@ -368,9 +362,7 @@ class Briefing(BaseModel):
             self.load()
 
     def load(self):
-        briefing = self.db.fetch_one(
-            "SELECT * FROM briefings WHERE id = ?", (self.id,)
-        )
+        briefing = self.db.fetch_one("SELECT * FROM briefings WHERE id = ?", (self.id,))
         if briefing:
             self.event_id = briefing["event_id"]
             self.general_info = briefing["general_info"]
@@ -441,9 +433,7 @@ class Sponsor(BaseModel):
             self.load()
 
     def load(self):
-        sponsor = self.db.fetch_one(
-            "SELECT * FROM sponsors WHERE id = ?", (self.id,)
-        )
+        sponsor = self.db.fetch_one("SELECT * FROM sponsors WHERE id = ?", (self.id,))
         if sponsor:
             self.event_id = sponsor["event_id"]
             self.name = sponsor["name"]
@@ -453,9 +443,7 @@ class Sponsor(BaseModel):
     def save(self):
         if self.id:
             # Atualizar patrocinador existente
-            return self.db.update(
-                "sponsors", {"name": self.name}, {"id": self.id}
-            )
+            return self.db.update("sponsors", {"name": self.name}, {"id": self.id})
         else:
             # Criar novo patrocinador
             sponsor_id = self.db.insert(
@@ -527,9 +515,7 @@ class Video(BaseModel):
             self.load()
 
     def load(self):
-        video = self.db.fetch_one(
-            "SELECT * FROM videos WHERE id = ?", (self.id,)
-        )
+        video = self.db.fetch_one("SELECT * FROM videos WHERE id = ?", (self.id,))
         if video:
             self.event_id = video["event_id"]
             self.title = video["title"]
@@ -635,9 +621,7 @@ class Asset(BaseModel):
             self.load()
 
     def load(self):
-        asset = self.db.fetch_one(
-            "SELECT * FROM assets WHERE id = ?", (self.id,)
-        )
+        asset = self.db.fetch_one("SELECT * FROM assets WHERE id = ?", (self.id,))
         if asset:
             self.event_id = asset["event_id"]
             self.name = asset["name"]

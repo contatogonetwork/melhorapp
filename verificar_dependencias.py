@@ -40,9 +40,7 @@ def scan_imports_in_file(file_path):
 
                 # Obter o módulo principal
                 if line.startswith("import "):
-                    module = (
-                        line[7:].strip().split(" as ")[0].split(",")[0].strip()
-                    )
+                    module = line[7:].strip().split(" as ")[0].split(",")[0].strip()
                     imports.add(module.split(".")[0])
                 elif line.startswith("from "):
                     module = line[5:].strip().split(" import ")[0]
@@ -98,9 +96,7 @@ def main():
     print("\nImportações mais utilizadas:")
 
     # Ordenar por frequência
-    sorted_imports = sorted(
-        import_count.items(), key=lambda x: x[1], reverse=True
-    )
+    sorted_imports = sorted(import_count.items(), key=lambda x: x[1], reverse=True)
     for module, count in sorted_imports[:15]:  # Top 15
         try:
             # Verificar se é um módulo nativo do Python

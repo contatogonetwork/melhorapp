@@ -1,5 +1,6 @@
 import hashlib
 import sqlite3
+
 from database.Database import Database
 
 
@@ -59,7 +60,7 @@ class User:
             return False
 
         finally:
-            if 'db' in locals():
+            if "db" in locals():
                 db.close()
 
     def _hash_password(self, password: str, salt: str) -> str:

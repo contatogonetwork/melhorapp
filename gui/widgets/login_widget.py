@@ -149,9 +149,7 @@ class LoginWidget(QWidget):
         # Subtítulo
         self.subtitle = QLabel("Entre na sua conta para continuar")
         self.subtitle.setAlignment(Qt.AlignCenter)
-        self.subtitle.setStyleSheet(
-            f"color: {style.comment_color}; font-size: 14px;"
-        )
+        self.subtitle.setStyleSheet(f"color: {style.comment_color}; font-size: 14px;")
         self.content_layout.addWidget(self.subtitle)
 
         # Formulário de login
@@ -349,9 +347,7 @@ class LoginWidget(QWidget):
                 )
 
         except Exception as e:
-            self.show_message(
-                "Erro de Autenticação", f"Erro ao autenticar: {str(e)}"
-            )
+            self.show_message("Erro de Autenticação", f"Erro ao autenticar: {str(e)}")
 
     def show_message(self, title, message):
         """Exibe uma mensagem de erro"""

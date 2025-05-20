@@ -418,9 +418,7 @@ class EditingWidget(QWidget):
         deliveries_layout.addWidget(
             self.approval_frame
         )  # Frame de aprovação para clientes
-        deliveries_layout.addWidget(
-            self.editor_frame
-        )  # Frame de ações para editores
+        deliveries_layout.addWidget(self.editor_frame)  # Frame de ações para editores
         deliveries_layout.addWidget(self.add_delivery_btn)
 
         # Configurar o layout das tabs
@@ -448,9 +446,7 @@ class EditingWidget(QWidget):
 
         # Conectar sinais
         self.event_selector.currentIndexChanged.connect(self.on_event_changed)
-        self.editor_selector.currentIndexChanged.connect(
-            self.on_editor_changed
-        )
+        self.editor_selector.currentIndexChanged.connect(self.on_editor_changed)
 
     # === Métodos para gerenciar as tabs ===
 
@@ -525,9 +521,7 @@ class EditingWidget(QWidget):
                     if (
                         "edito" in member["role"].lower()
                     ):  # editor, editora, edição etc.
-                        self.editor_selector.addItem(
-                            member["name"], member["id"]
-                        )
+                        self.editor_selector.addItem(member["name"], member["id"])
 
             # Carregar edições associadas ao evento
             self.load_video_edits(event_id)
@@ -704,17 +698,13 @@ class EditingWidget(QWidget):
                 else self.current_editing.get("title", "Sem título")
             ),
             "total_comentários": len(comments),
-            "comentários_resolvidos": sum(
-                1 for c in comments if c.is_resolved
-            ),
+            "comentários_resolvidos": sum(1 for c in comments if c.is_resolved),
         }
 
         # Exportar com base no formato selecionado
         success = False
         if extension == ".json":
-            success = CommentExporter.export_to_json(
-                comments, file_name, metadata
-            )
+            success = CommentExporter.export_to_json(comments, file_name, metadata)
         else:
             success = CommentExporter.export_to_pdf(
                 comments, file_name, "Comentários da Edição", metadata

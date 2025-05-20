@@ -26,9 +26,7 @@ def migrar_video_comments():
 
             # 3. Renomear a tabela atual
             print("Renomeando tabela atual...")
-            cursor.execute(
-                "ALTER TABLE video_comments RENAME TO video_comments_old"
-            )
+            cursor.execute("ALTER TABLE video_comments RENAME TO video_comments_old")
 
             # 4. Criar a nova tabela com o esquema correto
             print("Criando nova tabela com esquema atualizado...")
@@ -82,9 +80,7 @@ def migrar_video_comments():
                         comment_text,
                         0,  # Todos os comentários começam como não resolvidos
                         created_at
-                        or datetime.datetime.now().strftime(
-                            "%Y-%m-%d %H:%M:%S"
-                        ),
+                        or datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     ),
                 )
 
@@ -138,9 +134,7 @@ if __name__ == "__main__":
 
         print("\nNova estrutura da tabela:")
         for col in columns:
-            print(
-                f"  {col[1]} ({col[2]}){' PRIMARY KEY' if col[5] == 1 else ''}"
-            )
+            print(f"  {col[1]} ({col[2]}){' PRIMARY KEY' if col[5] == 1 else ''}")
 
         # Verificar dados
         cursor.execute("SELECT COUNT(*) FROM video_comments")
