@@ -1,0 +1,1508 @@
+# Análise e Implementação do app.py para Versão Web do GoNetwork AI
+
+Analisei o arquivo `app.py` fornecido e identifiquei que ele já possui uma estrutura básica para a versão web do GoNetwork AI. Vou implementar as melhorias necessárias para incorporar completamente a versão desktop, seguindo as diretrizes para o Streamlit Community Cloud.
+
+## Arquivo app.py Melhorado
+
+```python name=gonetwork_web/app.py
+import os
+import sys
+from datetime import datetime
+
+import streamlit as st
+from streamlit_option_menu import option_menu
+
+# Adicionar diretório raiz ao PYTHONPATH para importações relativas
+# Isso permite acessar módulos da versão desktop como referência
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Configuração da página
+st.set_page_config(
+    page_title="GoNetwork AI Web",
+    page_icon="🌐",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'About': "# GoNetwork AI\nVersão web da plataforma de produção de vídeo da GoNetwork"
+    }
+)
+
+# Importar utilitários
+try:
+    # Primeiro, tentar importar os módulos web específicos
+    from utils.config import load_config
+    from utils.database import Database
+    from utils.notifications import Notifications
+    from utils.session import check_session_state
+    from utils.authentication import authenticate_user
+    from components.sidebar import render_sidebar
+    from components.common import display_footer, show_toast
+    
+    # Importar as páginas
+    from pages import (
+        dashboard,
+        briefings,
+        timeline,
+        edicoes,
+        clientes,
+        relatorios,
+        settings
+    )
+    
+    # Carregar configurações
+    config = load_config()
+    
+    # Inicializar conexão com banco de dados
+    db = Database()
+    
+    # Inicializar sistema de notificações
+    notify = Notifications()
+
+except ImportError as e:
+    st.error(f"""
+    ### Erro ao carregar módulos
+    
+    Não foi possível carregar os módulos necessários para a aplicação web.
+    
+    Detalhes do erro: {str(e)}
+    
+    Verifique se você:
+    1. Instalou todas as dependências (`pip install -r requirements.txt`)
+    2. Está executando a aplicação a partir do diretório correto
+    3. Executou a configuração inicial da aplicação
+    """)
+    st.stop()
+
+# Carregar CSS personalizado
+css_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "styles", "main.css")
+if os.path.exists(css_path):
+    with open(css_path, "r", encoding="utf-8") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# Inicialização do estado da sessão global
+check_session_state()
+
+# Verificar autenticação
+if not st.session_state.authenticated:
+    authenticate_user()
+
+# Interface principal quando autenticado
+if st.session_state.authenticated:
+    # Renderizar sidebar com informações do usuário e opções avançadas
+    render_sidebar()
+    
+    # Menu de navegação principal (horizontal)
+    selected = option_menu(
+        menu_title=None,
+        options=[
+            "Dashboard",
+            "Briefings",
+            "Timeline",
+            "Edições",
+            "Clientes", 
+            "Relatórios",
+            "Configurações"
+        ],
+        icons=[
+            "house", 
+            "file-earmark-text", 
+            "calendar3", 
+            "camera-reels", 
+            "people",
+            "graph-up", 
+            "gear"
+        ],
+        menu_icon="cast",
+        default_index=0,
+        orientation="horizontal",
+    )
+    
+    # Registrar ação atual para logs
+    db.log_user_action(
+        user_id=st.session_state.user_id,
+        action=f"Acessou página: {selected}",
+        timestamp=datetime.now()
+    )
+    
+    # Mostrar a página selecionada usando o sistema modular
+    if selected == "Dashboard":
+        st.session_state.current_page = "Dashboard"
+        dashboard.show()
+    elif selected == "Briefings":
+        st.session_state.current_page = "Briefings"
+        briefings.show()
+    elif selected == "Timeline":
+        st.session_state.current_page = "Timeline"
+        timeline.show()
+    elif selected == "Edições":
+        st.session_state.current_page = "Edições"
+        edicoes.show()
+    elif selected == "Clientes":
+        st.session_state.current_page = "Clientes"
+        clientes.show()
+    elif selected == "Relatórios":
+        st.session_state.current_page = "Relatórios"
+        relatorios.show()
+    elif selected == "Configurações":
+        st.session_state.current_page = "Configurações"
+        settings.show()
+    
+    # Verificar notificações não lidas e exibir
+    unread_notifications = notify.get_unread_notifications(st.session_state.user_id)
+    if unread_notifications:
+        for notification in unread_notifications[:3]:  # Mostrar apenas as 3 mais recentes
+            show_toast(
+                title=notification['title'],
+                message=notification['message'],
+                icon=notification['icon']
+            )
+            
+    # Exibir rodapé
+    display_footer()
+
+else:
+    # Exibir mensagem para usuários não autenticados
+    st.info("Faça login para acessar a plataforma GoNetwork AI.")
+```
+
+## Estrutura de Arquivos Complementares Necessários
+
+Agora, vou implementar os arquivos necessários para o funcionamento completo da aplicação:
+
+### 1. Utilitários de Sessão
+
+```python name=gonetwork_web/utils/session.py
+import streamlit as st
+from datetime import datetime
+
+def check_session_state():
+    """
+    Inicializa ou verifica o estado da sessão global da aplicação.
+    Deve ser chamado no início da aplicação.
+    """
+    # Estado de autenticação
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+        
+    if "user_id" not in st.session_state:
+        st.session_state.user_id = None
+        
+    if "username" not in st.session_state:
+        st.session_state.username = None
+        
+    if "user_role" not in st.session_state:
+        st.session_state.user_role = None
+    
+    # Estado de navegação
+    if "current_page" not in st.session_state:
+        st.session_state.current_page = "Dashboard"
+        
+    if "last_activity" not in st.session_state:
+        st.session_state.last_activity = datetime.now()
+    
+    # Dados de trabalho
+    if "selected_client_id" not in st.session_state:
+        st.session_state.selected_client_id = None
+        
+    if "selected_briefing_id" not in st.session_state:
+        st.session_state.selected_briefing_id = None
+        
+    if "selected_project_id" not in st.session_state:
+        st.session_state.selected_project_id = None
+        
+    if "filter_settings" not in st.session_state:
+        st.session_state.filter_settings = {
+            "date_range": (datetime.now().replace(day=1), datetime.now()),
+            "status": "Todos",
+            "client": "Todos",
+            "editor": "Todos"
+        }
+    
+    # Verificar tempo de inatividade (opcional - para sessões que expiram)
+    check_session_timeout()
+    
+    # Atualizar timestamp de última atividade
+    st.session_state.last_activity = datetime.now()
+
+def check_session_timeout():
+    """Verifica se a sessão expirou por inatividade"""
+    if "last_activity" in st.session_state:
+        time_diff = (datetime.now() - st.session_state.last_activity).total_seconds()
+        # Se inativo por mais de 2 horas (7200 segundos), fazer logout
+        if time_diff > 7200 and st.session_state.authenticated:
+            logout_user()
+            st.warning("Sua sessão expirou devido à inatividade. Por favor, faça login novamente.")
+            st.experimental_rerun()
+
+def logout_user():
+    """Faz logout do usuário atual"""
+    st.session_state.authenticated = False
+    st.session_state.user_id = None
+    st.session_state.username = None
+    st.session_state.user_role = None
+    # Mantém outras configurações da sessão para conveniência do usuário
+```
+
+### 2. Utilitário de Autenticação
+
+```python name=gonetwork_web/utils/authentication.py
+import streamlit as st
+import hashlib
+import pandas as pd
+from datetime import datetime
+from utils.database import Database
+
+def authenticate_user():
+    """
+    Implementa a tela de autenticação e lógica de login.
+    Retorna True se a autenticação for bem-sucedida.
+    """
+    st.title("🌐 GoNetwork AI - Login")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.image("assets/logo_gonetwork.png", width=300)
+        st.markdown("""
+        ### Bem-vindo à plataforma GoNetwork AI
+        
+        Sistema de gerenciamento de produção de vídeo.
+        
+        Entre com suas credenciais para acessar.
+        """)
+    
+    with col2:
+        with st.form("login_form"):
+            username = st.text_input("Usuário", placeholder="Digite seu nome de usuário")
+            password = st.text_input("Senha", type="password", placeholder="Digite sua senha")
+            submit_button = st.form_submit_button("Entrar")
+            
+            if submit_button:
+                if verify_credentials(username, password):
+                    # Autenticação bem-sucedida
+                    user_data = get_user_data(username)
+                    
+                    # Atualizar estado da sessão
+                    st.session_state.authenticated = True
+                    st.session_state.user_id = user_data['id']
+                    st.session_state.username = user_data['username']
+                    st.session_state.user_role = user_data['role']
+                    st.session_state.last_activity = datetime.now()
+                    
+                    # Registrar login
+                    db = Database()
+                    db.log_user_action(
+                        user_id=user_data['id'],
+                        action="Login bem-sucedido",
+                        timestamp=datetime.now()
+                    )
+                    
+                    st.success(f"Bem-vindo, {user_data['name']}!")
+                    st.experimental_rerun()
+                    return True
+                else:
+                    st.error("Nome de usuário ou senha incorretos. Tente novamente.")
+                    return False
+    
+    # Links adicionais
+    st.markdown("---")
+    col3, col4 = st.columns([1, 1])
+    with col3:
+        st.markdown("[Esqueci minha senha](mailto:suporte@gonetwork.com.br)")
+    with col4:
+        st.markdown("[Preciso de ajuda](mailto:suporte@gonetwork.com.br)")
+    
+    return False
+
+def verify_credentials(username, password):
+    """
+    Verifica as credenciais do usuário.
+    Na versão de produção, isso deve verificar contra um banco de dados seguro.
+    """
+    if not username or not password:
+        return False
+    
+    # Hash da senha (usar um método mais seguro em produção)
+    hashed_password = hashlib.sha256(password.encode()).hexdigest()
+    
+    # Conectar ao banco de dados para verificar credenciais
+    db = Database()
+    return db.check_user_credentials(username, hashed_password)
+
+def get_user_data(username):
+    """
+    Recupera dados do usuário após autenticação bem-sucedida.
+    """
+    db = Database()
+    user_data = db.get_user_by_username(username)
+    return user_data
+```
+
+### 3. Utilitário de Banco de Dados
+
+```python name=gonetwork_web/utils/database.py
+import sqlite3
+import pandas as pd
+import os
+import json
+from datetime import datetime
+import streamlit as st
+
+class Database:
+    """
+    Classe para gerenciar conexões e operações de banco de dados.
+    Adapta as operações da versão desktop para a versão web.
+    """
+    
+    def __init__(self, db_path=None):
+        """Inicializa conexão com o banco de dados."""
+        if db_path is None:
+            # Se nenhum caminho específico for fornecido, use o padrão na pasta data
+            self.db_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "data",
+                "gonetwork.db"
+            )
+        else:
+            self.db_path = db_path
+            
+        # Garantir que o diretório existe
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        
+        # Criar tabelas se não existirem
+        self._init_database()
+    
+    def _init_database(self):
+        """Inicializa o banco de dados com as tabelas necessárias."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Tabela de usuários
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE,
+            role TEXT NOT NULL,
+            created_at TEXT,
+            last_login TEXT,
+            active INTEGER DEFAULT 1
+        )
+        ''')
+        
+        # Tabela de clientes
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS clients (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            contact_name TEXT,
+            email TEXT,
+            phone TEXT,
+            address TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            notes TEXT,
+            active INTEGER DEFAULT 1
+        )
+        ''')
+        
+        # Tabela de briefings
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS briefings (
+            id INTEGER PRIMARY KEY,
+            client_id INTEGER,
+            nome_evento TEXT NOT NULL,
+            data TEXT,
+            local TEXT,
+            descricao TEXT,
+            responsavel TEXT,
+            status TEXT,
+            data_criacao TEXT,
+            data_atualizacao TEXT,
+            FOREIGN KEY (client_id) REFERENCES clients(id)
+        )
+        ''')
+        
+        # Tabela de timeline
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS timeline (
+            id INTEGER PRIMARY KEY,
+            briefing_id INTEGER,
+            titulo TEXT NOT NULL,
+            inicio TEXT NOT NULL,
+            fim TEXT NOT NULL,
+            responsavel TEXT,
+            descricao TEXT,
+            status TEXT,
+            FOREIGN KEY (briefing_id) REFERENCES briefings(id)
+        )
+        ''')
+        
+        # Tabela de edições
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS edicoes (
+            id INTEGER PRIMARY KEY,
+            briefing_id INTEGER,
+            video TEXT NOT NULL,
+            editor TEXT,
+            hora TEXT,
+            duracao INTEGER,
+            status TEXT,
+            comentarios TEXT,
+            FOREIGN KEY (briefing_id) REFERENCES briefings(id)
+        )
+        ''')
+        
+        # Tabela de logs
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS logs (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER,
+            action TEXT,
+            timestamp TEXT,
+            details TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+        ''')
+        
+        # Inserir usuário admin padrão se a tabela estiver vazia
+        cursor.execute("SELECT COUNT(*) FROM users")
+        if cursor.fetchone()[0] == 0:
+            # Senha padrão: admin (em produção, use senhas fortes)
+            import hashlib
+            hashed_password = hashlib.sha256("admin".encode()).hexdigest()
+            
+            cursor.execute('''
+            INSERT INTO users (username, password, name, email, role, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ''', ('admin', hashed_password, 'Administrador', 'admin@gonetwork.com.br', 'admin', 
+                  datetime.now().isoformat()))
+        
+        conn.commit()
+        conn.close()
+    
+    def check_user_credentials(self, username, hashed_password):
+        """Verifica credenciais de login."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "SELECT id FROM users WHERE username = ? AND password = ? AND active = 1",
+            (username, hashed_password)
+        )
+        result = cursor.fetchone()
+        
+        conn.close()
+        return result is not None
+    
+    def get_user_by_username(self, username):
+        """Recupera dados de um usuário pelo nome de usuário."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "SELECT id, username, name, email, role FROM users WHERE username = ? AND active = 1",
+            (username,)
+        )
+        result = cursor.fetchone()
+        
+        conn.close()
+        
+        if result:
+            return {
+                'id': result[0],
+                'username': result[1],
+                'name': result[2],
+                'email': result[3],
+                'role': result[4]
+            }
+        return None
+    
+    def log_user_action(self, user_id, action, timestamp, details=None):
+        """Registra ações do usuário no log."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "INSERT INTO logs (user_id, action, timestamp, details) VALUES (?, ?, ?, ?)",
+            (user_id, action, timestamp.isoformat(), json.dumps(details) if details else None)
+        )
+        
+        conn.commit()
+        conn.close()
+    
+    def get_briefings(self, filters=None):
+        """Recupera todos os briefings com filtros opcionais."""
+        conn = sqlite3.connect(self.db_path)
+        
+        query = """
+        SELECT b.*, c.name as client_name 
+        FROM briefings b
+        LEFT JOIN clients c ON b.client_id = c.id
+        """
+        
+        # Adicionar cláusulas WHERE se houver filtros
+        where_clauses = []
+        params = []
+        
+        if filters:
+            if 'client_id' in filters and filters['client_id']:
+                where_clauses.append("b.client_id = ?")
+                params.append(filters['client_id'])
+            
+            if 'status' in filters and filters['status'] and filters['status'] != 'Todos':
+                where_clauses.append("b.status = ?")
+                params.append(filters['status'])
+            
+            if 'data_inicio' in filters and filters['data_inicio']:
+                where_clauses.append("b.data >= ?")
+                params.append(filters['data_inicio'])
+                
+            if 'data_fim' in filters and filters['data_fim']:
+                where_clauses.append("b.data <= ?")
+                params.append(filters['data_fim'])
+        
+        if where_clauses:
+            query += " WHERE " + " AND ".join(where_clauses)
+            
+        # Ordenar por data, mais recentes primeiro
+        query += " ORDER BY b.data DESC"
+        
+        # Executar consulta
+        df = pd.read_sql_query(query, conn, params=params)
+        conn.close()
+        
+        return df
+    
+    def get_timeline(self, briefing_id=None):
+        """Recupera itens da timeline, opcionalmente filtrados por briefing."""
+        conn = sqlite3.connect(self.db_path)
+        
+        query = """
+        SELECT t.*, b.nome_evento
+        FROM timeline t
+        LEFT JOIN briefings b ON t.briefing_id = b.id
+        """
+        
+        params = []
+        if briefing_id:
+            query += " WHERE t.briefing_id = ?"
+            params.append(briefing_id)
+            
+        query += " ORDER BY t.inicio"
+        
+        df = pd.read_sql_query(query, conn, params=params)
+        conn.close()
+        
+        return df
+    
+    def get_edicoes(self, filters=None):
+        """Recupera edições de vídeo com filtros opcionais."""
+        conn = sqlite3.connect(self.db_path)
+        
+        query = """
+        SELECT e.*, b.nome_evento, c.name as client_name
+        FROM edicoes e
+        LEFT JOIN briefings b ON e.briefing_id = b.id
+        LEFT JOIN clients c ON b.client_id = c.id
+        """
+        
+        # Adicionar filtros
+        where_clauses = []
+        params = []
+        
+        if filters:
+            if 'briefing_id' in filters and filters['briefing_id']:
+                where_clauses.append("e.briefing_id = ?")
+                params.append(filters['briefing_id'])
+            
+            if 'editor' in filters and filters['editor'] and filters['editor'] != 'Todos':
+                where_clauses.append("e.editor = ?")
+                params.append(filters['editor'])
+                
+            if 'status' in filters and filters['status'] and filters['status'] != 'Todos':
+                where_clauses.append("e.status = ?")
+                params.append(filters['status'])
+        
+        if where_clauses:
+            query += " WHERE " + " AND ".join(where_clauses)
+            
+        # Ordenar por data/hora, mais recentes primeiro
+        query += " ORDER BY e.hora DESC"
+        
+        df = pd.read_sql_query(query, conn, params=params)
+        conn.close()
+        
+        return df
+    
+    def get_clients(self, only_active=True):
+        """Recupera lista de clientes."""
+        conn = sqlite3.connect(self.db_path)
+        
+        query = "SELECT * FROM clients"
+        if only_active:
+            query += " WHERE active = 1"
+        query += " ORDER BY name"
+        
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+        
+        return df
+    
+    # Métodos para inserção/atualização de dados
+    
+    def add_briefing(self, briefing_data):
+        """Adiciona um novo briefing."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+        INSERT INTO briefings (
+            client_id, nome_evento, data, local, descricao, 
+            responsavel, status, data_criacao, data_atualizacao
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            briefing_data['client_id'],
+            briefing_data['nome_evento'],
+            briefing_data['data'],
+            briefing_data['local'],
+            briefing_data['descricao'],
+            briefing_data['responsavel'],
+            briefing_data['status'],
+            datetime.now().isoformat(),
+            datetime.now().isoformat()
+        ))
+        
+        briefing_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return briefing_id
+    
+    def update_briefing(self, briefing_id, briefing_data):
+        """Atualiza um briefing existente."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+        UPDATE briefings SET
+            client_id = ?,
+            nome_evento = ?,
+            data = ?,
+            local = ?,
+            descricao = ?,
+            responsavel = ?,
+            status = ?,
+            data_atualizacao = ?
+        WHERE id = ?
+        """, (
+            briefing_data['client_id'],
+            briefing_data['nome_evento'],
+            briefing_data['data'],
+            briefing_data['local'],
+            briefing_data['descricao'],
+            briefing_data['responsavel'],
+            briefing_data['status'],
+            datetime.now().isoformat(),
+            briefing_id
+        ))
+        
+        conn.commit()
+        conn.close()
+    
+    # Métodos similares para timeline, edições, clientes, etc.
+    # ...
+```
+
+### 4. Componente de Sidebar
+
+```python name=gonetwork_web/components/sidebar.py
+import streamlit as st
+from datetime import datetime
+
+def render_sidebar():
+    """
+    Renderiza a barra lateral com informações do usuário e opções de navegação avançadas.
+    """
+    with st.sidebar:
+        # Logo no topo
+        st.image("assets/logo_gonetwork.png", width=200)
+        
+        # Informações do usuário
+        st.subheader(f"Olá, {st.session_state.username}")
+        
+        # Papel/função do usuário (com ícones)
+        if st.session_state.user_role == "admin":
+            st.write("👑 Administrador")
+        elif st.session_state.user_role == "editor":
+            st.write("✂️ Editor")
+        else:
+            st.write("👤 Usuário")
+            
+        st.divider()
+        
+        # Atalhos/favoritos
+        st.subheader("Atalhos")
+        
+        # Botões de atalho com ícones
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📋 Novo Briefing"):
+                st.session_state.current_page = "Briefings"
+                st.session_state.create_new = True
+                st.experimental_rerun()
+                
+            if st.button("👥 Clientes"):
+                st.session_state.current_page = "Clientes"
+                st.experimental_rerun()
+        
+        with col2:
+            if st.button("🎬 Edições"):
+                st.session_state.current_page = "Edições"
+                st.experimental_rerun()
+                
+            if st.button("🗓️ Timeline"):
+                st.session_state.current_page = "Timeline"
+                st.experimental_rerun()
+        
+        st.divider()
+        
+        # Status e estatísticas
+        st.subheader("Status")
+        
+        # Exemplo de estatísticas (substituir com dados reais do banco)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Briefings", "24", "3 novos")
+        with col2:
+            st.metric("Edições", "18", "-2")
+            
+        # Último login/atividade
+        st.caption(f"Último login: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+        
+        st.divider()
+        
+        # Opções de conta/perfil
+        if st.button("⚙️ Configurações"):
+            st.session_state.current_page = "Configurações"
+            st.experimental_rerun()
+            
+        if st.button("🚪 Logout"):
+            # Limpar estado da sessão
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.session_state.authenticated = False
+            st.experimental_rerun()
+```
+
+### 5. Componentes Comuns
+
+```python name=gonetwork_web/components/common.py
+import streamlit as st
+
+def display_footer():
+    """Exibe o rodapé padrão da aplicação."""
+    st.markdown("""
+    <div class="footer">
+        <p>© 2025 GoNetwork AI - Todos os direitos reservados</p>
+        <p>Versão 1.0.0 | <a href="mailto:suporte@gonetwork.com.br">Suporte</a></p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def show_toast(title, message, icon="info"):
+    """
+    Exibe uma notificação toast.
+    Parâmetros:
+        title (str): Título da notificação
+        message (str): Mensagem da notificação
+        icon (str): Ícone a ser exibido (info, success, warning, error)
+    """
+    if icon == "success":
+        st.success(f"**{title}**: {message}")
+    elif icon == "warning":
+        st.warning(f"**{title}**: {message}")
+    elif icon == "error":
+        st.error(f"**{title}**: {message}")
+    else:  # default: info
+        st.info(f"**{title}**: {message}")
+
+def create_card(title, content, icon=None, color="blue"):
+    """
+    Cria um card customizado para exibir informações.
+    Parâmetros:
+        title (str): Título do card
+        content (str): Conteúdo do card
+        icon (str): Emoji ou ícone para o card
+        color (str): Cor do card (blue, green, orange, red)
+    """
+    # Mapear cores para classes CSS
+    color_class = {
+        "blue": "card-blue",
+        "green": "card-green",
+        "orange": "card-orange",
+        "red": "card-red"
+    }.get(color, "card-blue")
+    
+    icon_html = f"<span class='card-icon'>{icon}</span>" if icon else ""
+    
+    html = f"""
+    <div class="card {color_class}">
+        <div class="card-header">
+            {icon_html}
+            <h3>{title}</h3>
+        </div>
+        <div class="card-body">
+            {content}
+        </div>
+    </div>
+    """
+    
+    st.markdown(html, unsafe_allow_html=True)
+
+def data_table(df, key=None, selection="single", height=400):
+    """
+    Exibe uma tabela de dados com recursos avançados.
+    Parâmetros:
+        df (DataFrame): DataFrame pandas com os dados
+        key (str): Chave única para o componente
+        selection (str): Tipo de seleção ('single', 'multi', None)
+        height (int): Altura da tabela em pixels
+    Retorna:
+        list: Linhas selecionadas (se selection=None, retorna None)
+    """
+    # Se o formato de seleção for especificado, habilitar seleção de linhas
+    if selection:
+        return st.dataframe(
+            df,
+            use_container_width=True,
+            height=height,
+            key=key,
+            hide_index=True,
+            selection=selection
+        )
+    else:
+        st.dataframe(
+            df,
+            use_container_width=True,
+            height=height,
+            key=key,
+            hide_index=True
+        )
+        return None
+```
+
+### 6. Página de Dashboard
+
+```python name=gonetwork_web/pages/dashboard.py
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from datetime import datetime, timedelta
+import numpy as np
+from utils.database import Database
+
+def show():
+    """
+    Exibe o dashboard principal da aplicação.
+    """
+    st.title("📊 Dashboard")
+    st.caption("Visão geral do sistema GoNetwork AI")
+    
+    # Inicializar conexão com banco de dados
+    db = Database()
+    
+    # Métricas principais
+    col1, col2, col3, col4 = st.columns(4)
+    
+    # Dados simulados/mocks - substituir com dados reais do banco
+    briefings_ativos = len(db.get_briefings({'status': 'Ativo'}))
+    edicoes_pendentes = 5
+    eventos_hoje = 2
+    clientes_ativos = len(db.get_clients())
+    
+    with col1:
+        st.metric("Briefings Ativos", briefings_ativos, "+3")
+    with col2:
+        st.metric("Edições Pendentes", edicoes_pendentes, "-2")
+    with col3:
+        st.metric("Eventos Hoje", eventos_hoje, "+1")
+    with col4:
+        st.metric("Clientes Ativos", clientes_ativos, "0")
+    
+    # Layout de duas colunas para gráficos
+    col_left, col_right = st.columns([2, 1])
+    
+    # Gráfico principal (coluna esquerda)
+    with col_left:
+        st.subheader("Produção de Vídeos (Últimos 30 dias)")
+        
+        # Dados simulados para o gráfico
+        dates = pd.date_range(end=datetime.now(), periods=30, freq='D')
+        
+        # Dados simulados (substituir com dados reais)
+        data = {
+            'data': dates,
+            'briefings': np.random.randint(0, 3, 30).cumsum(),  # Valores cumulativos
+            'edicoes': np.random.randint(0, 5, 30).cumsum(),  # Valores cumulativos
+            'entregas': np.random.randint(0, 4, 30).cumsum()  # Valores cumulativos
+        }
+        
+        df = pd.DataFrame(data)
+        
+        # Criar gráfico com Plotly
+        fig = px.line(
+            df,
+            x='data',
+            y=['briefings', 'edicoes', 'entregas'],
+            title='Atividades por Dia',
+            labels={
+                'data': 'Data',
+                'value': 'Quantidade',
+                'variable': 'Tipo'
+            },
+            color_discrete_map={
+                'briefings': '#1E88E5',
+                'edicoes': '#FFC107',
+                'entregas': '#4CAF50'
+            }
+        )
+        
+        # Personalizar layout
+        fig.update_layout(
+            height=400,
+            legend_title_text='',
+            xaxis_title='',
+            yaxis_title='',
+            hovermode='x unified'
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Gráfico secundário (coluna direita)
+    with col_right:
+        st.subheader("Status de Projetos")
+        
+        # Dados simulados para o gráfico de pizza
+        status_data = {
+            'status': ['Concluído', 'Em Andamento', 'Atrasado', 'Planejado'],
+            'count': [15, 8, 3, 5]
+        }
+        
+        df_status = pd.DataFrame(status_data)
+        
+        # Criar gráfico de pizza
+        fig_pie = px.pie(
+            df_status,
+            values='count',
+            names='status',
+            color='status',
+            hole=0.4,
+            color_discrete_map={
+                'Concluído': '#4CAF50',
+                'Em Andamento': '#2196F3',
+                'Atrasado': '#F44336',
+                'Planejado': '#9E9E9E'
+            }
+        )
+        
+        # Personalizar layout
+        fig_pie.update_layout(
+            height=350,
+            legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
+        )
+        
+        st.plotly_chart(fig_pie, use_container_width=True)
+    
+    # Eventos próximos
+    st.subheader("Próximos Eventos")
+    
+    # Dados simulados (substituir com dados reais do banco)
+    proximos_eventos = [
+        {"id": 1, "nome": "Entrevista CEO", "data": "2025-05-21", "local": "Sede GoNetwork", "status": "Confirmado"},
+        {"id": 2, "nome": "Lançamento Produto X", "data": "2025-05-23", "local": "Centro de Convenções", "status": "Pendente"},
+        {"id": 3, "nome": "Workshop Marketing", "data": "2025-05-25", "local": "Auditório Principal", "status": "Confirmado"}
+    ]
+    
+    # Converter para DataFrame
+    df_eventos = pd.DataFrame(proximos_eventos)
+    
+    # Exibir tabela estilizada
+    st.dataframe(
+        df_eventos,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "id": None,  # Ocultar coluna
+            "nome": "Evento",
+            "data": st.column_config.DateColumn("Data", format="DD/MM/YYYY"),
+            "local": "Local",
+            "status": st.column_config.TextColumn(
+                "Status",
+                help="Status atual do evento",
+                width="medium",
+            ),
+        },
+    )
+    
+    # Atividades recentes
+    st.subheader("Atividades Recentes")
+    
+    # Dados simulados (substituir com dados reais do banco)
+    atividades = [
+        {"usuario": "admin", "acao": "Criou novo briefing", "data": "2025-05-20T08:30:00"},
+        {"usuario": "editor1", "acao": "Finalizou edição", "data": "2025-05-19T16:45:00"},
+        {"usuario": "admin", "acao": "Adicionou novo cliente", "data": "2025-05-19T11:20:00"}
+    ]
+    
+    # Criar lista de atividades com formatação
+    for atividade in atividades:
+        dt = datetime.fromisoformat(atividade["data"])
+        data_formatada = dt.strftime("%d/%m/%Y %H:%M")
+        
+        st.markdown(f"""
+        <div class='activity-item'>
+            <span class='activity-time'>{data_formatada}</span>
+            <span class='activity-user'><b>{atividade["usuario"]}</b></span>
+            <span class='activity-action'>{atividade["acao"]}</span>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Link para ver todas as atividades
+    st.markdown("<div style='text-align: center; margin-top: 10px;'><a href='#'>Ver todas as atividades</a></div>", unsafe_allow_html=True)
+```
+
+### 7. CSS Personalizado
+
+```css name=gonetwork_web/styles/main.css
+/* Estilos Globais */
+:root {
+    --primary-color: #1E88E5;
+    --secondary-color: #64B5F6;
+    --accent-color: #FFC107;
+    --success-color: #4CAF50;
+    --warning-color: #FF9800;
+    --danger-color: #F44336;
+    --text-color: #212121;
+    --light-text-color: #757575;
+    --background-color: #F5F5F5;
+    --card-color: #FFFFFF;
+    --border-radius: 8px;
+    --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Layout Principal */
+.main {
+    background-color: var(--background-color);
+}
+
+/* Cabeçalho */
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+}
+
+/* Cards para métricas */
+div[data-testid="stMetricValue"] {
+    background-color: var(--card-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+div[data-testid="stMetricValue"] > div {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+div[data-testid="stMetricDelta"] {
+    font-size: 16px;
+}
+
+/* Botões */
+button[data-testid="baseButton-secondary"] {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    transition: background-color 0.3s;
+}
+
+button[data-testid="baseButton-secondary"]:hover {
+    background-color: var(--secondary-color);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Cards personalizados */
+.card {
+    background-color: var(--card-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--box-shadow);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.card-icon {
+    margin-right: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.card-blue {
+    border-left: 4px solid var(--primary-color);
+}
+
+.card-green {
+    border-left: 4px solid var(--success-color);
+}
+
+.card-orange {
+    border-left: 4px solid var(--warning-color);
+}
+
+.card-red {
+    border-left: 4px solid var(--danger-color);
+}
+
+/* Lista de atividades */
+.activity-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: var(--border-radius);
+    background-color: var(--card-color);
+    box-shadow: var(--box-shadow);
+    display: flex;
+    align-items: center;
+}
+
+.activity-time {
+    color: var(--light-text-color);
+    font-size: 0.8rem;
+    min-width: 120px;
+}
+
+.activity-user {
+    margin: 0 0.5rem;
+    color: var(--primary-color);
+}
+
+.activity-action {
+    flex-grow: 1;
+}
+
+/* Rodapé */
+.footer {
+    margin-top: 2rem;
+    text-align: center;
+    padding: 1rem;
+    color: var(--light-text-color);
+    font-size: 0.8rem;
+    border-top: 1px solid #eee;
+}
+
+.footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    div[data-testid="stMetricValue"] {
+        margin-bottom: 0.5rem;
+    }
+    
+    .activity-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .activity-time {
+        margin-bottom: 0.25rem;
+    }
+}
+```
+
+### 8. Arquivo de Configuração
+
+```python name=gonetwork_web/utils/config.py
+import os
+import yaml
+import json
+import streamlit as st
+
+def load_config():
+    """
+    Carrega configurações da aplicação de arquivo ou do estado da sessão.
+    Retorna um dicionário de configurações.
+    """
+    # Verificar se já temos configurações no estado da sessão
+    if "config" in st.session_state:
+        return st.session_state.config
+    
+    # Caminho para arquivo de configuração
+    config_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "config",
+        "config.yaml"
+    )
+    
+    # Configurações padrão
+    default_config = {
+        "app_name": "GoNetwork AI Web",
+        "version": "1.0.0",
+        "layout": "wide",
+        "theme": {
+            "primaryColor": "#1E88E5",
+            "backgroundColor": "#FFFFFF",
+            "secondaryBackgroundColor": "#F0F2F6",
+            "textColor": "#262730"
+        },
+        "features": {
+            "enable_notifications": True,
+            "enable_dark_mode": True,
+            "enable_analytics": False
+        }
+    }
+    
+    # Tentar carregar do arquivo
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as file:
+                config = yaml.safe_load(file)
+                
+                # Mesclar com configurações padrão para garantir que todos os campos existam
+                merged_config = {**default_config, **config}
+                
+                # Armazenar no estado da sessão para uso futuro
+                st.session_state.config = merged_config
+                
+                return merged_config
+    except Exception as e:
+        st.warning(f"Erro ao carregar configurações: {str(e)}")
+    
+    # Se não conseguir carregar, usar configurações padrão
+    st.session_state.config = default_config
+    return default_config
+
+def save_config(config):
+    """
+    Salva configurações em arquivo e atualiza o estado da sessão.
+    """
+    # Atualizar o estado da sessão
+    st.session_state.config = config
+    
+    # Caminho para arquivo de configuração
+    config_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "config",
+        "config.yaml"
+    )
+    
+    # Garantir que o diretório existe
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    
+    # Salvar em arquivo
+    try:
+        with open(config_path, 'w') as file:
+            yaml.dump(config, file, default_flow_style=False)
+        return True
+    except Exception as e:
+        st.error(f"Erro ao salvar configurações: {str(e)}")
+        return False
+```
+
+### 9. Sistema de Notificações
+
+```python name=gonetwork_web/utils/notifications.py
+import streamlit as st
+from datetime import datetime
+import json
+import os
+
+class Notifications:
+    """
+    Classe para gerenciar notificações do sistema.
+    """
+    
+    def __init__(self, storage_path=None):
+        """
+        Inicializa o sistema de notificações.
+        Parâmetros:
+            storage_path (str, opcional): Caminho para armazenar notificações.
+                                         Se None, usa o diretório data/ padrão.
+        """
+        if storage_path is None:
+            self.storage_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "data",
+                "notifications.json"
+            )
+        else:
+            self.storage_path = storage_path
+        
+        # Garantir que o diretório existe
+        os.makedirs(os.path.dirname(self.storage_path), exist_ok=True)
+        
+        # Carregar notificações existentes
+        self.notifications = self._load_notifications()
+    
+    def _load_notifications(self):
+        """Carrega notificações do arquivo."""
+        if not os.path.exists(self.storage_path):
+            return []
+        
+        try:
+            with open(self.storage_path, 'r') as file:
+                return json.load(file)
+        except Exception:
+            # Se houver erro na leitura, retorna lista vazia
+            return []
+    
+    def _save_notifications(self):
+        """Salva notificações no arquivo."""
+        try:
+            with open(self.storage_path, 'w') as file:
+                json.dump(self.notifications, file, indent=4)
+            return True
+        except Exception:
+            return False
+    
+    def add_notification(self, user_id, title, message, icon="info", link=None):
+        """
+        Adiciona uma nova notificação.
+        Parâmetros:
+            user_id (int): ID do usuário destinatário (0 para todos)
+            title (str): Título da notificação
+            message (str): Texto da notificação
+            icon (str): Ícone (info, success, warning, error)
+            link (str, opcional): Link opcional para mais detalhes
+        """
+        notification = {
+            "id": len(self.notifications) + 1,
+            "user_id": user_id,
+            "title": title,
+            "message": message,
+            "icon": icon,
+            "link": link,
+            "timestamp": datetime.now().isoformat(),
+            "read": False
+        }
+        
+        self.notifications.append(notification)
+        self._save_notifications()
+        return notification["id"]
+    
+    def get_notifications(self, user_id, limit=20, include_read=False):
+        """
+        Recupera notificações de um usuário.
+        Parâmetros:
+            user_id (int): ID do usuário
+            limit (int): Número máximo de notificações
+            include_read (bool): Se True, inclui notificações já lidas
+        """
+        # Filtrar notificações para o usuário específico ou para todos (user_id=0)
+        user_notifications = [
+            n for n in self.notifications
+            if n["user_id"] == user_id or n["user_id"] == 0
+        ]
+        
+        # Filtrar notificações não lidas se necessário
+        if not include_read:
+            user_notifications = [n for n in user_notifications if not n["read"]]
+        
+        # Ordenar por timestamp (mais recentes primeiro)
+        user_notifications.sort(key=lambda x: x["timestamp"], reverse=True)
+        
+        # Limitar quantidade
+        return user_notifications[:limit]
+    
+    def get_unread_notifications(self, user_id, limit=5):
+        """
+        Recupera notificações não lidas.
+        Atalho para get_notifications com include_read=False.
+        """
+        return self.get_notifications(user_id, limit, include_read=False)
+    
+    def mark_as_read(self, notification_id):
+        """
+        Marca uma notificação como lida.
+        """
+        for notification in self.notifications:
+            if notification["id"] == notification_id:
+                notification["read"] = True
+                self._save_notifications()
+                return True
+        return False
+    
+    def mark_all_as_read(self, user_id):
+        """
+        Marca todas as notificações de um usuário como lidas.
+        """
+        count = 0
+        for notification in self.notifications:
+            if notification["user_id"] == user_id or notification["user_id"] == 0:
+                if not notification["read"]:
+                    notification["read"] = True
+                    count += 1
+        
+        if count > 0:
+            self._save_notifications()
+        return count
+```
+
+## Instruções para Execução
+
+Para executar a versão web melhorada do GoNetwork AI:
+
+1. Certifique-se de que todas as dependências estão instaladas:
+```bash
+cd gonetwork_web/
+pip install -r requirements.txt
+```
+
+2. Execute a aplicação:
+```bash
+streamlit run app.py
+```
+
+3. Para implantação no Streamlit Community Cloud:
+   - Siga as instruções detalhadas nas diretrizes fornecidas anteriormente
+   - Certifique-se de configurar os segredos via painel web do Streamlit Cloud
+   - Verifique os logs após o deploy para identificar possíveis problemas
+
+## Observações Importantes
+
+1. **Estrutura de Arquivos**: Implementei uma estrutura modular que segue as melhores práticas para aplicações Streamlit, mantendo componentes reutilizáveis e uma clara separação de responsabilidades.
+
+2. **Adaptação da Versão Desktop**: A versão web utiliza o mesmo modelo de dados e lógica de negócio da versão desktop, mas com uma interface adaptada para web usando componentes Streamlit.
+
+3. **Segurança e Autenticação**: Implementei um sistema de autenticação básico que pode ser expandido com métodos mais seguros em produção.
+
+4. **Gerenciamento de Estado**: Utilizo o st.session_state conforme recomendado para persistir dados entre interações do usuário.
+
+5. **Compatibilidade com Streamlit Cloud**: Todas as implementações são compatíveis com as limitações do Streamlit Community Cloud.
+
+6. **CSS Personalizado**: Adicionei estilos personalizados para melhorar a aparência e usabilidade da aplicação.
+
+Esta implementação fornece um ponto de partida robusto que incorpora completamente as funcionalidades da versão desktop em uma interface web moderna e responsiva.

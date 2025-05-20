@@ -1,0 +1,19 @@
+[theme]
+primaryColor="#1E88E5"
+backgroundColor="#FFFFFF"
+secondaryBackgroundColor="#F0F2F6"
+textColor="#262730"
+font="sans serif"
+
+[browser]
+gatherUsageStats = false
+serverPort = 8501
+
+[server]
+maxUploadSize = 200
+enableXsrfProtection = true
+enableCORS = false
+
+[runner]
+# Isso pode reduzir alguns dos avisos sobre componentes não registrados
+fastReruns = true

@@ -1,0 +1,538 @@
+# Prompt Técnico: Diretrizes para Desenvolvimento e Implantação com Streamlit Community Cloud
+
+## Estrutura de Arquivos Recomendada para Streamlit Community Cloud
+
+```markdown name=estrutura_streamlit.md
+# Estrutura Recomendada para Aplicações Streamlit
+
+gonetwork_web/
+├── app.py                  # Ponto de entrada principal (obrigatório)
+├── requirements.txt        # Lista de dependências (obrigatório)
+├── .streamlit/             # Configurações do Streamlit
+│   ├── config.toml         # Configurações de tema e interface
+│   └── secrets.toml        # Segredos locais (NÃO comitar no GitHub)
+├── .gitignore              # Controle de arquivos ignorados pelo Git
+├── pages/                  # Páginas adicionais (sistema multi-page)
+│   ├── dashboard.py        # Exemplo: Dashboard principal
+│   ├── clientes.py         # Exemplo: Gestão de clientes
+│   └── relatorios.py       # Exemplo: Relatórios e análises
+├── components/             # Componentes de UI reutilizáveis
+│   ├── sidebar.py          # Exemplo: Componente de barra lateral
+│   └── authentication.py   # Exemplo: Componente de autenticação
+├── utils/                  # Funções utilitárias
+│   ├── data_processing.py  # Exemplo: Processamento de dados
+│   └── network_tools.py    # Exemplo: Ferramentas específicas de rede
+├── assets/                 # Recursos estáticos
+│   ├── images/             # Imagens e ícones
+│   ├── css/                # Arquivos CSS personalizados
+│   └── logo.png            # Logo da aplicação
+└── data/                   # Arquivos de dados locais (se necessário)
+    ├── sample_data.csv     # Dados de exemplo
+    └── config.json         # Configurações em formato JSON
+```
+
+## Limitações do Streamlit Community Cloud
+
+1. **Recursos Computacionais**:
+   - Ambiente compartilhado com recursos limitados (CPU/RAM)
+   - Aplicações hibernam após período sem uso (geralmente 7 dias)
+   - Tempo limite de 60 segundos para carregar a página inicial
+
+2. **Armazenamento e Persistência**:
+   - Sem armazenamento persistente nativo (usar serviços externos para dados persistentes)
+   - Qualquer arquivo criado durante a execução é temporário e não persiste após reinicializações
+   - Aplicações são reiniciadas periodicamente (não dependa de memória em cache de longo prazo)
+
+3. **Rede e Segurança**:
+   - Acesso apenas a hosts públicos (não acessa redes privadas)
+   - Apenas portas HTTP/HTTPS são acessíveis
+   - Não permite execução de código arbitrário no shell
+   - Não permite instalação de pacotes de sistema (apt, yum, etc.)
+   - Não suporta bibliotecas que requerem compiladores C/C++ complexos
+
+## Boas Práticas para Desenvolvimento Streamlit
+
+1. **Gerenciamento de Estado**:
+   ```python
+   # Inicializar variáveis de estado no início do script
+   if "authenticated" not in st.session_state:
+       st.session_state.authenticated = False
+
+   if "user_data" not in st.session_state:
+       st.session_state.user_data = None
+
+   # Manipular estado
+   def login_user(username, password):
+       # Autenticação bem-sucedida
+       st.session_state.authenticated = True
+       st.session_state.username = username
+   ```
+
+2. **Otimização de Performance**:
+   ```python
+   # Cache para dados que não mudam frequentemente
+   @st.cache_data(ttl=3600)  # Cache de 1 hora
+   def load_large_dataset():
+       return pd.read_csv("large_data.csv")
+
+   # Cache para recursos compartilhados (modelos, conexões)
+   @st.cache_resource
+   def get_database_connection():
+       return create_connection_to_database()
+   ```
+
+3. **Gestão de Segredos (Importante)**:
+   - **Desenvolvimento local**: Use `.streamlit/secrets.toml` (adicione ao .gitignore)
+   - **Em produção**: Configure via painel web do Streamlit Community Cloud
+   ```python
+   # Acessar segredos em código
+   api_key = st.secrets["api_keys"]["service_name"]
+   db_password = st.secrets["db_credentials"]["password"]
+   ```
+
+4. **Layouts Responsivos**:
+   ```python
+   # Exemplo de layout responsivo com colunas
+   col1, col2 = st.columns([2, 1])  # Proporção 2:1
+
+   with col1:
+       st.header("Conteúdo Principal")
+       st.write("Ocupa 2/3 da largura disponível")
+
+   with col2:
+       st.header("Painel Lateral")
+       st.write("Ocupa 1/3 da largura disponível")
+   ```
+
+5. **Organização Multi-página**:
+   - Arquivos Python na pasta `pages/` são automaticamente reconhecidos como páginas
+   - A ordem é controlada por 01_, 02_ prefixos no nome do arquivo
+   - Cada arquivo deve ser independente e funcionar sozinho
+
+## Arquivos de Configuração
+
+```toml name=.streamlit/config.toml
+# Configurações de tema
+[theme]
+primaryColor = "#1E88E5"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+
+# Configurações do servidor
+[server]
+headless = true
+port = 8501
+enableCORS = false
+
+# Configurações de browser
+[browser]
+gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8501
+
+# Comportamento do cache
+[runner]
+magicEnabled = true
+installTracker = true
+```
+
+```gitignore name=.gitignore
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Ambientes virtuais
+venv/
+.venv/
+ENV/
+env/
+
+# Streamlit específico
+.streamlit/secrets.toml
+
+# Arquivos de banco de dados
+*.db
+*.sqlite3
+gonetwork.db
+
+# Arquivos locais
+.env
+.local
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Arquivos temporários
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+```
+
+## Arquivo de Dependências (requirements.txt)
+
+```txt name=requirements.txt
+# Dependência principal - especificar versão exata
+streamlit==1.29.0
+
+# Processamento de dados
+pandas==2.0.3
+numpy==1.24.3
+
+# Visualização
+plotly==5.15.0
+matplotlib==3.7.2
+
+# UI aprimorada
+streamlit-option-menu==0.3.2
+streamlit-authenticator==0.2.2
+streamlit-extras==0.3.0
+
+# Utilitários
+requests==2.31.0
+pillow==9.5.0
+pyyaml==6.0.1
+watchdog==3.0.0
+
+# Para desenvolvimento local apenas
+# python-dotenv==1.0.0  # Descomente para desenvolvimento local
+```
+
+## Exemplo de Página (briefing.py)
+
+```python name=pages/briefing.py
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from datetime import datetime, timedelta
+
+# Configuração da página
+st.set_page_config(
+    page_title="Briefing do Cliente - GoNetwork Web",
+    page_icon="📋",
+    layout="wide"
+)
+
+def load_client_data(client_id):
+    """
+    Carrega dados do cliente (simulado para exemplo).
+    Na versão real, buscaria do banco de dados ou API.
+    """
+    # Simulação de dados
+    return {
+        "id": client_id,
+        "nome": "Empresa XYZ Tecnologia",
+        "responsavel": "João Silva",
+        "contato": "(11) 98765-4321",
+        "email": "joao.silva@xyztech.com",
+        "plano": "Empresarial Plus",
+        "data_inicio": "2024-01-15",
+        "status": "Ativo"
+    }
+
+def load_network_metrics(client_id):
+    """
+    Carrega métricas de rede do cliente (simulado).
+    """
+    # Simulação de dados de tráfego para últimos 7 dias
+    dates = [datetime.now() - timedelta(days=i) for i in range(7, 0, -1)]
+
+    return pd.DataFrame({
+        "data": dates,
+        "download_gb": [45.2, 38.7, 52.1, 41.3, 39.8, 47.5, 51.2],
+        "upload_gb": [12.3, 10.5, 14.2, 11.8, 10.9, 13.1, 14.8],
+        "latencia_ms": [18, 22, 17, 19, 21, 18, 16]
+    })
+
+def load_tickets(client_id):
+    """
+    Carrega histórico de tickets (simulado).
+    """
+    return [
+        {"id": "T1001", "data": "2024-05-15", "titulo": "Lentidão no acesso", "status": "Resolvido"},
+        {"id": "T1042", "data": "2024-05-10", "titulo": "Configuração de VPN", "status": "Resolvido"},
+        {"id": "T1087", "data": "2024-05-18", "titulo": "Queda de conexão intermitente", "status": "Em andamento"}
+    ]
+
+def display_client_info(client_data):
+    """
+    Exibe informações do cliente.
+    """
+    st.header("Informações do Cliente")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader(client_data["nome"])
+        st.write(f"**Responsável:** {client_data['responsavel']}")
+        st.write(f"**Contato:** {client_data['contato']}")
+        st.write(f"**Email:** {client_data['email']}")
+
+    with col2:
+        st.metric("Plano", client_data["plano"])
+        st.write(f"**Data de Início:** {client_data['data_inicio']}")
+
+        # Status com cor condicional
+        status = client_data["status"]
+        if status == "Ativo":
+            st.success(f"**Status:** {status}")
+        elif status == "Pendente":
+            st.warning(f"**Status:** {status}")
+        else:
+            st.error(f"**Status:** {status}")
+
+def display_network_metrics(metrics_data):
+    """
+    Exibe métricas de rede com gráficos.
+    """
+    st.header("Métricas de Rede")
+
+    # Tabs para diferentes visualizações
+    tab1, tab2, tab3 = st.tabs(["Tráfego", "Latência", "Resumo"])
+
+    with tab1:
+        # Gráfico de tráfego
+        fig = px.line(
+            metrics_data,
+            x="data",
+            y=["download_gb", "upload_gb"],
+            title="Tráfego Diário (GB)",
+            labels={"value": "GB", "data": "Data", "variable": "Tipo"},
+            color_discrete_map={"download_gb": "#1E88E5", "upload_gb": "#FFC107"}
+        )
+        fig.update_layout(height=400)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with tab2:
+        # Gráfico de latência
+        fig = px.line(
+            metrics_data,
+            x="data",
+            y="latencia_ms",
+            title="Latência Média Diária (ms)",
+            labels={"latencia_ms": "Latência (ms)", "data": "Data"},
+            color_discrete_sequence=["#4CAF50"]
+        )
+        fig.update_layout(height=400)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with tab3:
+        # Resumo de métricas
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            total_download = metrics_data["download_gb"].sum()
+            st.metric("Download Total (7 dias)", f"{total_download:.1f} GB")
+
+        with col2:
+            total_upload = metrics_data["upload_gb"].sum()
+            st.metric("Upload Total (7 dias)", f"{total_upload:.1f} GB")
+
+        with col3:
+            avg_latency = metrics_data["latencia_ms"].mean()
+            st.metric("Latência Média", f"{avg_latency:.1f} ms")
+
+def display_tickets(tickets_data):
+    """
+    Exibe histórico de tickets.
+    """
+    st.header("Histórico de Tickets")
+
+    if not tickets_data:
+        st.info("Nenhum ticket encontrado para este cliente.")
+        return
+
+    # Converter para DataFrame para exibição em tabela
+    df = pd.DataFrame(tickets_data)
+
+    # Aplicar estilo condicional com base no status
+    def highlight_status(val):
+        color = {
+            "Resolvido": "green",
+            "Em andamento": "orange",
+            "Aberto": "red"
+        }
+        return f"background-color: {color.get(val, '')}"
+
+    # Exibir tabela estilizada
+    st.dataframe(
+        df.style.applymap(highlight_status, subset=["status"]),
+        use_container_width=True,
+        hide_index=True
+    )
+
+def main():
+    """
+    Função principal que controla o fluxo da página.
+    """
+    st.title("📋 Briefing do Cliente")
+
+    # Barra lateral para seleção do cliente (em uma app real, buscar do banco)
+    with st.sidebar:
+        st.header("Seleção de Cliente")
+        client_id = st.selectbox(
+            "Escolha um cliente:",
+            options=["C1001", "C1002", "C1003"],
+            format_func=lambda x: f"{x} - Empresa XYZ" if x == "C1001" else f"{x} - Cliente {x[1:]}",
+            index=0
+        )
+
+        st.divider()
+
+        # Filtros adicionais
+        st.subheader("Filtros")
+        date_range = st.date_input(
+            "Período de análise",
+            value=[datetime.now() - timedelta(days=7), datetime.now()],
+            max_value=datetime.now()
+        )
+
+        # Botão para gerar relatório
+        if st.button("📊 Gerar Relatório PDF", type="primary"):
+            st.success("Relatório gerado com sucesso!")
+            with st.spinner("Aguarde o download..."):
+                st.download_button(
+                    label="⬇️ Download Relatório",
+                    data=b"Simulação de PDF",  # Em uma app real, gerar PDF real
+                    file_name=f"briefing_cliente_{client_id}_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    mime="application/pdf",
+                )
+
+    # Carregar dados do cliente selecionado
+    client_data = load_client_data(client_id)
+    network_metrics = load_network_metrics(client_id)
+    tickets = load_tickets(client_id)
+
+    # Exibir informações
+    display_client_info(client_data)
+    st.divider()
+    display_network_metrics(network_metrics)
+    st.divider()
+    display_tickets(tickets)
+
+    # Seção de notas e observações
+    st.header("Notas e Observações")
+    notes = st.text_area(
+        "Adicionar observação",
+        placeholder="Insira notas importantes sobre este cliente...",
+        height=100
+    )
+
+    if st.button("Salvar Observação"):
+        st.success("Observação salva com sucesso!")
+        # Em uma app real, salvar no banco de dados
+
+# Executar a app
+if __name__ == "__main__":
+    main()
+```
+
+## Comandos para Desenvolvimento Local
+
+```bash name=comandos_locais.sh
+# Criar ambiente virtual
+python -m venv .venv
+source .venv/bin/activate  # No Windows: .venv\Scripts\activate
+
+# Instalar dependências
+pip install -r requirements.txt
+
+# Desenvolvimento local com auto-reload
+streamlit run app.py --server.runOnSave=true
+
+# Verificar dependências instaladas
+pip freeze > requirements_full.txt
+
+# Testar modo de produção local
+streamlit run app.py --server.headless=true
+```
+
+## Instruções de Deploy no Streamlit Community Cloud
+
+```markdown name=instrucoes_deploy.md
+# Instruções Completas para Deploy no Streamlit Community Cloud
+
+## 1. Preparação do Repositório
+
+- Certifique-se de que `app.py` está no caminho correto (raiz ou subdiretório)
+- Verifique se `requirements.txt` está completo e com versões específicas
+- **IMPORTANTE**: Adicione `.streamlit/secrets.toml` ao `.gitignore`
+- Commite todas as alterações locais e faça push para o GitHub
+
+## 2. Deploy no Streamlit Community Cloud
+
+1. Acesse [https://share.streamlit.io/](https://share.streamlit.io/)
+2. Faça login com sua conta GitHub
+3. Clique em "New app"
+4. Selecione o repositório `contatogonetwork/melhorapp`
+5. Escolha a branch principal (geralmente `main` ou `master`)
+6. No campo **"Main file path"**, especifique:
+   - Se app estiver na raiz: `app.py`
+   - Se estiver no subdiretório: `gonetwork_web/app.py`
+7. Clique em "Advanced settings" e configure:
+   - **Python Version**: Escolha a versão compatível (recomendado 3.9+)
+   - **Packages**: O sistema usa o requirements.txt automaticamente
+   - **Secrets**: Adicione todos os segredos/API keys necessários (equivalente ao seu arquivo local secrets.toml)
+
+8. Clique em "Deploy!" e aguarde a conclusão
+
+## 3. Após o Deploy
+
+- Verifique os logs para possíveis erros
+- Teste todas as funcionalidades principais
+- Verifique se os segredos estão funcionando
+- Compartilhe o link com sua equipe/clientes
+
+## 4. Gerenciamento Contínuo
+
+- Qualquer push para a branch selecionada atualiza automaticamente a aplicação
+- Para atualizações de segredos, use o painel do Streamlit Community Cloud
+- Para depuração, use o botão "Manage app" e verifique os logs
+- Para desativar temporariamente, use a opção "Sleep app"
+
+## Solução de Problemas Comuns
+
+- **Erro de importação de módulos**: Verifique o caminho relativo das importações
+- **Erro de dependência**: Verifique se todas as bibliotecas estão no requirements.txt
+- **Erro de segredos**: Verifique se adicionou os segredos no painel do Streamlit Cloud
+- **Tempo de carregamento excedido**: Otimize o código para carregar em menos de 60 segundos
+- **Erro de arquivo não encontrado**: Verifique o caminho do arquivo principal
+
+## Resources Adicionais
+
+- [Documentação Oficial do Streamlit](https://docs.streamlit.io/)
+- [Fórum da Comunidade Streamlit](https://discuss.streamlit.io/)
+- [GitHub do Streamlit](https://github.com/streamlit/streamlit)
+```
+
+## Considerações Finais
+
+- O Streamlit Community Cloud é otimizado para aplicações data-centric que não exigem recursos computacionais pesados
+- Para aplicações mais complexas ou que precisem de maior controle, considere hospedar em serviços como Heroku, AWS, GCP ou Azure
+- Lembre-se que o deploy no Streamlit Community Cloud publica sua aplicação publicamente - para aplicações privadas considere sua própria infraestrutura ou planos empresariais do Streamlit
+
+Estas diretrizes completas abrangem todos os aspectos essenciais para desenvolver e implantar com sucesso uma versão web do GoNetwork usando Streamlit, garantindo compatibilidade total com o Streamlit Community Cloud.

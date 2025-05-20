@@ -1,0 +1,26 @@
+# Dependências principais
+streamlit==1.29.0
+streamlit-option-menu==0.3.2
+streamlit-authenticator==0.2.2
+streamlit-extras==0.3.0
+
+# Processamento de dados
+pandas==2.0.3
+numpy==1.24.3
+
+# Visualização
+plotly==5.15.0
+matplotlib==3.7.2
+
+# Utilitários
+requests==2.31.0
+pillow==9.5.0
+pyyaml==6.0.1
+watchdog==3.0.0
+
+# Dependências para compatibilidade com a versão desktop
+# Estas dependências permitem reutilizar componentes da versão desktop
+# adaptados para o ambiente web
+PySide6==6.6.1
+PySide6-Addons
+PySide6-Essentials

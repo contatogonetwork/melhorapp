@@ -1,0 +1,22 @@
+{
+    "app_name": "GoNetwork AI Web",
+    "version": "1.0.0",
+    "database": {
+        "path": "../data/gonetwork.db"
+    },
+    "theme": {
+        "primary_color": "#1E88E5",
+        "secondary_color": "#64B5F6",
+        "accent_color": "#FFC107"
+    },
+    "features": {
+        "enable_advanced_charts": true,
+        "enable_notifications": true,
+        "enable_comments": true
+    },
+    "paths": {
+        "uploads": "../uploads",
+        "logs": "../logs",
+        "assets": "assets"
+    }
+}
