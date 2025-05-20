@@ -1,4 +1,4 @@
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QPoint, QSize, Qt
 from PySide6.QtGui import QAction, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
@@ -43,18 +43,11 @@ class AssetCard(QFrame):
         self.layout.setContentsMargins(5, 5, 5, 5)
         self.layout.setSpacing(5)
 
-        # Tipo de ícones por tipo de asset
-        icon_map = {
-            "Imagem": "./resources/icons/image.svg",
-            "Vídeo": "./resources/icons/video.svg",
-            "Áudio": "./resources/icons/audio.svg",
-            "Logo": "./resources/icons/logo.svg",
-            "Outro": "./resources/icons/file.svg",
-        }
-
         # Thumbnail/preview
         self.preview = QLabel()
         self.preview.setAlignment(Qt.AlignCenter)
+
+        import os
 
         if asset_type == "Imagem" and file_path:
             # Se for uma imagem real, carrega-la
@@ -66,8 +59,27 @@ class AssetCard(QFrame):
             )
             self.preview.setPixmap(pixmap)
         else:
-            # Ou usar um ícone adequado
-            icon_path = icon_map.get(asset_type, icon_map["Outro"])
+            # Determinar extensão e escolher ícone adequado
+            ext = os.path.splitext(name)[-1].lower() if name else ""
+
+            # Mapeamento por extensão
+            if ext in [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff"]:
+                icon_path = "./resources/icons/image.svg"
+            elif ext in [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".flv"]:
+                icon_path = "./resources/icons/video.svg"
+            elif ext in [".mp3", ".wav", ".ogg", ".flac", ".aac", ".m4a"]:
+                icon_path = "./resources/icons/audio.svg"
+            elif ext in [".pdf", ".doc", ".docx", ".txt", ".rtf", ".xls", ".xlsx"]:
+                icon_path = "./resources/icons/document.svg"
+            elif ext in [".psd", ".ai", ".fig", ".xd", ".sketch"]:
+                icon_path = "./resources/icons/edit.svg"
+            elif ext in [".zip", ".rar", ".7z", ".tar", ".gz"]:
+                icon_path = "./resources/icons/archive.svg"
+            elif ext in [".svg", ".eps", ".cdr"]:
+                icon_path = "./resources/icons/logo.svg"
+            else:
+                icon_path = "./resources/icons/file.svg"
+
             icon = QIcon(icon_path)
             self.preview.setPixmap(icon.pixmap(QSize(64, 64)))
 
