@@ -1,26 +1,23 @@
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPixmap
-from PySide6.QtWidgets import (
-    QLabel,
-    QProgressBar,
-    QSplashScreen,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QProgressBar, QSplashScreen, QVBoxLayout, QWidget
 
 
 class SplashScreen(QSplashScreen):
     def __init__(self):
-        super().__init__()
+        # Criar pixmap com a logomarca
+        pixmap = QPixmap(600, 400)
+        pixmap.fill(QColor("#021E33"))  # Fundo azul escuro conforme solicitado
+
+        # Inicializar o QSplashScreen com o pixmap
+        super().__init__(pixmap)
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
-
-        # Configuração do tamanho
-        self.setFixedSize(600, 400)
 
         # Widget central com layout
         self.central_widget = QWidget(self)
         self.central_widget.setFixedSize(self.size())
+        self.central_widget.setStyleSheet("background-color: transparent;")
 
         self.layout = QVBoxLayout(self.central_widget)
         self.layout.setContentsMargins(20, 20, 20, 20)
@@ -30,15 +27,12 @@ class SplashScreen(QSplashScreen):
         # Logo
         self.logo_label = QLabel()
         self.logo_label.setAlignment(Qt.AlignCenter)
-        self.logo_label.setText("GoNetwork AI")  # Placeholder até termos um logo real
-        self.logo_label.setStyleSheet(
-            """
-            color: #FFFFFF;
-            font-size: 48px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        """
-        )
+        logo_pixmap = QPixmap("resources/images/logo_gonetwork.png")
+        if not logo_pixmap.isNull():
+            self.logo_label.setPixmap(
+                logo_pixmap.scaledToHeight(140, Qt.SmoothTransformation)
+            )
+        self.logo_label.setStyleSheet("background-color: transparent;")
 
         # Descrição
         self.description_label = QLabel(
@@ -65,7 +59,7 @@ class SplashScreen(QSplashScreen):
                 background-color: #303030;
                 border-radius: 2px;
             }
-            
+
             QProgressBar::chunk {
                 background-color: #BD93F9;
                 border-radius: 2px;

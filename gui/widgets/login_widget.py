@@ -112,7 +112,7 @@ class LoginWidget(QWidget):
         # Logo ou imagem
         try:
             self.logo = QLabel()
-            logo_pixmap = QPixmap("./resources/icons/logo.svg")
+            logo_pixmap = QPixmap("resources/images/logo_gonetwork.png")
             if not logo_pixmap.isNull():
                 self.logo.setPixmap(
                     logo_pixmap.scaledToWidth(120, Qt.SmoothTransformation)
